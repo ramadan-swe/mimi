@@ -21,3 +21,23 @@ class User(AbstractUser):
     @property
     def active_listings_count(self):
         return self.listings.filter(is_deleted=False, status='ACTIVE').count()
+
+
+class IDVerification(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='id_verification')
+    national_id_image_front = models.ImageField(upload_to='national_id_images/front/')
+    national_id_image_back = models.ImageField(upload_to='national_id_images/back/')
+    driver_license_image = models.ImageField(upload_to='driver_license_images/')
+    is_verified = models.BooleanField(default=False)
+    verification_date = models.DateTimeField(auto_now_add=True)
+    verification_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_by')
+    verification_notes = models.TextField(blank=True, null=True)
+
+    
+    def get_verification_status(self):
+        """Display verification status clearly"""
+        if self.is_verified:
+            return " Verified"
+        return " Not Verified"
+    get_verification_status.short_description = "Verification Status"
+

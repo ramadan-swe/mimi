@@ -25,9 +25,9 @@ class User(AbstractUser):
 
 class IDVerification(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='id_verification')
-    national_id_image_front = models.ImageField(upload_to='national_id_images/front/')
-    national_id_image_back = models.ImageField(upload_to='national_id_images/back/')
-    driver_license_image = models.ImageField(upload_to='driver_license_images/')
+    national_id_image_front = models.ImageField(upload_to='media/national_id_images/front/')
+    national_id_image_back = models.ImageField(upload_to='media/national_id_images/back/')
+    driver_license_image = models.ImageField(upload_to='media/driver_license_images/')
     is_verified = models.BooleanField(default=False)
     verification_date = models.DateTimeField(auto_now_add=True)
     verification_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_by')

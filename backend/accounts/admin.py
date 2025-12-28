@@ -76,11 +76,6 @@ class IDVerificationAdmin(admin.ModelAdmin):
             obj.verification_by = request.user
         super().save_model(request, obj, form, change)
 
-
-
-
-
-
     actions = ['approve_verification', 'reject_verification']
     
     def approve_verification(self, request, queryset):

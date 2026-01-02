@@ -37,6 +37,13 @@ class ListingViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("You have reached the maximum number of listings for your subscription.")
         serializer.save(owner=user)
 
+    def perform_destroy(self, instance):
+        """
+        Soft delete the listing instead of removing it from the DB.
+        """
+        instance.status = 'HIDDEN'
+        instance.save()
+
     @action(detail=True, methods=['post'], serializer_class=ListingImageCreateSerializer)
     def upload_image(self, request, pk=None):
         listing = self.get_object()

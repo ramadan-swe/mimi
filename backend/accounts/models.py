@@ -1,12 +1,20 @@
 from django.db import models
-
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import FileField, ForeignKey, BooleanField, IntegerField, CharField
 
+import uuid
+
+
 class User(AbstractUser):
-    phone_number = models.CharField(max_length=15, unique=True)
+    username = models.CharField(max_length=255, unique=True, default=uuid.uuid4)
+    email = models.EmailField(_('email address'), unique=True)
+    phone_number = models.CharField(max_length=15, unique=True, null=True, blank=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
     is_verified_identity = models.BooleanField(default=False)
     national_id_hash = models.CharField(max_length=64, unique=True, null=True, blank=True, db_index=True)
     waseet_score = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])

@@ -51,18 +51,18 @@ class Listing(models.Model):
     category = models.CharField(max_length=20, choices=[('BASE', 'Base Line'), ('MID', 'Mid Line'), ('HIGH', 'High Line'), ('TOP', 'Top Line'), ('PREMIUM', 'Premium')])
     mileage_range = models.CharField(max_length=20, choices=[('0-15K', '0-15,000 KM'), ('15-30K', '15,000-30,000 KM'), ('30-60K', '30,000-60,000 KM'), ('60-90K', '60,000-90,000 KM'), ('90-120K', '90,000-120,000 KM'), ('120-150K', '120,000-150,000 KM'), ('150K+', '> 150,000 KM')])
     is_insured = models.BooleanField(default=False)
-    extras = models.JSONField(default=dict) # Boolean dict for: {"AC": true, "GPS": false, "Bluetooth": true, "Cruise_Control": false, "Parking_Sensor": true, "Rear_Camera": false, "Baby_Seat": false}
+    extras = models.JSONField(default=dict, blank=True, null=True) # Boolean dict for: {"AC": true, "GPS": false, "Bluetooth": true, "Cruise_Control": false, "Parking_Sensor": true, "Rear_Camera": false, "Baby_Seat": false}
     daily_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     weekly_discount = models.DecimalField(max_digits=5, decimal_places=2, default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # Percentage
     monthly_discount = models.DecimalField(max_digits=5, decimal_places=2, default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # Percentage
-    seasonal_pricing_config = models.JSONField(default=dict, blank=True) # Future use: {"from": "2024-06-01", "to": "2024-08-31", "increase_pct": 20}
+    seasonal_pricing_config = models.JSONField(default=dict, blank=True, null=True) # Future use: {"from": "2024-06-01", "to": "2024-08-31", "increase_pct": 20}
     is_featured = models.BooleanField(default=False) # Low priority
     featured_until = models.DateTimeField(null=True, blank=True)
     governorate = models.CharField(max_length=50, choices=EGYPT_GOVERNORATES_CHOICES) # Cairo, Alexandria, Giza, etc. (27 total)
     city = models.CharField(max_length=50)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    status = models.CharField(max_length=10, choices=[('ACTIVE', 'Active'), ('HIDDEN', 'Hidden'), ('BANNED', 'Banned')], default='ACTIVE', db_index=True)
+    status = models.CharField(max_length=10, choices=[('ACTIVE', 'Active'), ('HIDDEN', 'Hidden'), ('BANNED', 'Banned')], default='ACTIVE', db_index=True) #Enum
     embedding = VectorField(dimensions=1536, null=True, blank=True) # Using pgvector extension for AI search
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

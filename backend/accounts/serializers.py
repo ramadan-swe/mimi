@@ -47,14 +47,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('confirm_password')
-        user = User()
-        user.email = validated_data['email']
-        user.password = validated_data['password']
-        user.first_name = validated_data['first_name']
-        user.last_name = validated_data['last_name']
-        user.phone_number = validated_data['phone_number']
-        user.role = 'RENTER'
-        user.is_verified_identity = False
-        user.waseet_score = 0
-        user.save()
-        return user
+        instance = self.Meta.model(**validated_data)
+        instance.set_password(validated_data['password'])
+        instance.role = 'RENTER'
+        instance.is_verified_identity = False
+        instance.waseet_score = 0
+        instance.save()
+        return instance

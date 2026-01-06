@@ -1,32 +1,50 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../lib/api';
+import { decodeJWT } from '../lib/jwt';
+import { toast } from 'sonner';
 const AuthContext = createContext(undefined);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
+
     useEffect(() => {
         // Check if user is logged in on mount
         const token = localStorage.getItem('access_token');
         if (token) {
-            // In real app, fetch user data from /api/auth/me/ or similar
-            const mockUser = {
-                id: '1',
-                email: 'john.doe@example.com',
-                first_name: 'John',
-                last_name: 'Doe',
-                phone_number: '+201234567890',
-                phone_verified: true,
-                is_verified_identity: true,
-                role: 'HOST',
-                waseet_score: 85,
-            };
-            setUser(mockUser);
+            const user = decodeJWT(token);
+            if (user) {
+                setUser(user);
+            } else {
+                logout();
+            }
         }
         setIsLoading(false);
-    }, []);
+
+        // Listen for auth:unauthorized events
+        const handleUnauthorized = () => {
+            logout();
+            navigate('/login');
+            toast.error('Session expired. Please login again.');
+        };
+
+        window.addEventListener('auth:unauthorized', handleUnauthorized);
+        return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+    }, [navigate]);
     const login = async (email, password) => {
-        const response = await authAPI.login(email, password);
-        setUser(response.user);
+        try {
+            const response = await authAPI.login(email, password);
+            localStorage.setItem('access_token', response.access);
+            localStorage.setItem('refresh_token', response.refresh);
+
+            const user = decodeJWT(response.access);
+            setUser(user);
+            return user;
+        } catch (error) {
+            console.error("Login failed:", error.response?.data || error.message);
+            throw error;
+        }
     };
     const logout = () => {
         localStorage.removeItem('access_token');
@@ -41,15 +59,15 @@ export const AuthProvider = ({ children }) => {
         setUser(updatedUser);
     };
     return (<AuthContext.Provider value={{
-            user,
-            isAuthenticated: !!user,
-            isLoading,
-            login,
-            logout,
-            register,
-            updateUser,
-        }}>
-      {children}
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        logout,
+        register,
+        updateUser,
+    }}>
+        {children}
     </AuthContext.Provider>);
 };
 export const useAuth = () => {

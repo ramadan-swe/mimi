@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../components/ui/button';
@@ -8,86 +9,138 @@ import { Card } from '../components/ui/card';
 import { Car } from 'lucide-react';
 import { toast } from 'sonner';
 export default function SignUpPage() {
-    const [formData, setFormData] = useState({
-        email: '',
-        password: '',
-        first_name: '',
-        last_name: '',
-        phone_number: '',
-    });
-    const [isLoading, setIsLoading] = useState(false);
-    const { register } = useAuth();
-    const navigate = useNavigate();
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-        try {
-            await register(formData);
-            toast.success('Account created successfully! Please verify your phone.');
-            navigate('/login');
-        }
-        catch (error) {
-            toast.error('Registration failed. Please try again.');
-        }
-        finally {
-            setIsLoading(false);
-        }
-    };
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-    return (<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-12">
-      <Card className="w-full max-w-md p-8 space-y-6">
-        <div className="flex justify-center">
-          <div className="flex items-center space-x-2">
-            <Car className="h-10 w-10 text-blue-600"/>
-            <span className="text-3xl font-bold text-gray-900">Mimi</span>
+  const { register: registerForm, handleSubmit, watch, formState: { errors } } = useForm();
+  const [isLoading, setIsLoading] = useState(false);
+  const { register: registerUser } = useAuth();
+  const navigate = useNavigate();
+
+  const onSubmit = async (data) => {
+    setIsLoading(true);
+    try {
+      // Remove confirm_password before sending to API
+      const { confirm_password, ...apiData } = data;
+      await registerUser(apiData);
+      toast.success('Account created successfully! Please verify your phone.');
+      navigate('/login');
+    }
+    catch (error) {
+      toast.error('Registration failed. Please try again.');
+    }
+    finally {
+      setIsLoading(false);
+    }
+  };
+
+  const password = watch("password", "");
+
+  return (<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-12">
+    <Card className="w-full max-w-md p-8 space-y-6">
+      <div className="flex justify-center">
+        <div className="flex items-center space-x-2">
+          <Car className="h-10 w-10 text-blue-600" />
+          <span className="text-3xl font-bold text-gray-900">Mimi</span>
+        </div>
+      </div>
+
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
+        <p className="text-gray-600 mt-2">Join thousands of car owners and renters</p>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="first_name">First Name</Label>
+            <Input
+              id="first_name"
+              {...registerForm("first_name", { required: "First name is required" })}
+            />
+            {errors.first_name && <p className="text-sm text-red-500">{errors.first_name.message}</p>}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="last_name">Last Name</Label>
+            <Input
+              id="last_name"
+              {...registerForm("last_name", { required: "Last name is required" })}
+            />
+            {errors.last_name && <p className="text-sm text-red-500">{errors.last_name.message}</p>}
           </div>
         </div>
 
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
-          <p className="text-gray-600 mt-2">Join thousands of car owners and renters</p>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            {...registerForm("email", {
+              required: "Email is required",
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: "Invalid email address"
+              }
+            })}
+          />
+          {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="first_name">First Name</Label>
-              <Input id="first_name" name="first_name" value={formData.first_name} onChange={handleChange} required/>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="last_name">Last Name</Label>
-              <Input id="last_name" name="last_name" value={formData.last_name} onChange={handleChange} required/>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required/>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="phone_number">Phone Number</Label>
-            <Input id="phone_number" name="phone_number" type="tel" placeholder="+20XXXXXXXXXX" value={formData.phone_number} onChange={handleChange} required/>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" name="password" type="password" value={formData.password} onChange={handleChange} required/>
-          </div>
-
-          <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-            {isLoading ? 'Creating Account...' : 'Sign Up'}
-          </Button>
-        </form>
-
-        <div className="text-center text-sm text-gray-600">
-          Already have an account?{' '}
-          <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
-            Sign In
-          </Link>
+        <div className="space-y-2">
+          <Label htmlFor="phone_number">Phone Number</Label>
+          <Input
+            id="phone_number"
+            type="tel"
+            placeholder="+20XXXXXXXXXX"
+            {...registerForm("phone_number", {
+              required: "Phone number is required",
+              pattern: {
+                value: /^\+?[1-9]\d{1,14}$/,
+                message: "Invalid phone number format"
+              }
+            })}
+          />
+          {errors.phone_number && <p className="text-sm text-red-500">{errors.phone_number.message}</p>}
         </div>
-      </Card>
-    </div>);
+
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            {...registerForm("password", {
+              required: "Password is required",
+              minLength: {
+                value: 8,
+                message: "Password must be at least 8 characters"
+              }
+            })}
+          />
+          {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="confirm_password">Confirm Password</Label>
+          <Input
+            id="confirm_password"
+            type="password"
+            {...registerForm("confirm_password", {
+              required: "Please confirm your password",
+              validate: value => value === password || "Passwords do not match"
+            })}
+          />
+          {errors.confirm_password && <p className="text-sm text-red-500">{errors.confirm_password.message}</p>}
+        </div>
+
+
+        <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+          {isLoading ? 'Creating Account...' : 'Sign Up'}
+        </Button>
+      </form>
+
+      <div className="text-center text-sm text-gray-600">
+        Already have an account?{' '}
+        <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
+          Sign In
+        </Link>
+      </div>
+    </Card>
+  </div>);
 }

@@ -14,6 +14,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['email'] = user.email
         token['is_verified_identity'] = user.is_verified_identity
         token['full_name'] = user.get_full_name()
+        token['first_name'] = user.first_name
+        token['last_name'] = user.last_name
         token['waseet_score'] = user.waseet_score
 
         return token
@@ -21,14 +23,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 class UserRegistrationSerializer(serializers.ModelSerializer):
 
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-    confirm_password = serializers.CharField(write_only=True, required=True)
     first_name = serializers.CharField(required=True, max_length=150)
     last_name = serializers.CharField(required=True, max_length=150)
     phone_number = serializers.CharField(required=True, max_length=15)
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'phone_number', 'password', 'confirm_password')
+        fields = ('email', 'first_name', 'last_name', 'phone_number', 'password')
 
     def validate_email(self, value):
         if User.objects.filter(email__iexact=value).exists():
@@ -40,13 +41,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("user with this phone number already exists.")
         return value
 
-    def validate(self, attrs):
-        if attrs['password'] != attrs['confirm_password']:
-            raise serializers.ValidationError({"password": "Password fields didn't match."})
-        return attrs
-
     def create(self, validated_data):
-        validated_data.pop('confirm_password')
         instance = self.Meta.model(**validated_data)
         instance.set_password(validated_data['password'])
         instance.role = 'RENTER'
@@ -54,3 +49,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         instance.waseet_score = 0
         instance.save()
         return instance
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('phone_number', )

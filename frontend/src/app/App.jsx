@@ -18,70 +18,70 @@ import ProfilePage from './pages/ProfilePage';
 import SubscriptionPage from './pages/SubscriptionPage';
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-    const { isAuthenticated, isLoading } = useAuth();
-    if (isLoading) {
-        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-    }
-    if (!isAuthenticated) {
-        return <Navigate to="/login"/>;
-    }
-    return <>{children}</>;
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+  return <>{children}</>;
 };
 function AppRoutes() {
-    const { isAuthenticated } = useAuth();
-    return (<div className="min-h-screen bg-gray-50">
-      {/* Scroll to top on route change */}
-      <ScrollToTop />
+  const { isAuthenticated } = useAuth();
+  return (<div className="min-h-screen bg-gray-50">
+    {/* Scroll to top on route change */}
+    <ScrollToTop />
 
-      {/* Desktop Navigation - Always show */}
-      {/* Mobile Navigation - Show only when NOT authenticated */}
-      <div className={isAuthenticated ? 'hidden md:block' : 'block mb-16'}>
-        <Navbar />
-      </div>
+    {/* Desktop Navigation - Always show */}
+    {/* Mobile Navigation - Show only when NOT authenticated */}
+    <div className="block mb-16">
+      <Navbar />
+    </div>
 
-      {/* Main Content */}
-      <main className="pb-16 md:pb-0">
-        <Routes>
-          <Route path="/" element={<HomePage />}/>
-          <Route path="/explore" element={<ExplorePage />}/>
-          <Route path="/login" element={<LoginPage />}/>
-          <Route path="/signup" element={<SignUpPage />}/>
-          <Route path="/listings/:id" element={<ListingDetailPage />}/>
+    {/* Main Content */}
+    <main className="pb-16 md:pb-0">
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/explore" element={<ExplorePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/listings/:id" element={<ListingDetailPage />} />
 
-          {/* Protected Routes */}
-          <Route path="/dashboard" element={<ProtectedRoute>
-                <OwnerDashboard />
-              </ProtectedRoute>}/>
-          <Route path="/create-listing" element={<ProtectedRoute>
-                <CreateListingPage />
-              </ProtectedRoute>}/>
-          <Route path="/chat" element={<ProtectedRoute>
-                <ChatPage />
-              </ProtectedRoute>}/>
-          <Route path="/chat/:rentalId" element={<ProtectedRoute>
-                <ChatPage />
-              </ProtectedRoute>}/>
-          <Route path="/profile" element={<ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>}/>
-          <Route path="/subscription" element={<ProtectedRoute>
-                <SubscriptionPage />
-              </ProtectedRoute>}/>
-        </Routes>
-      </main>
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={<ProtectedRoute>
+          <OwnerDashboard />
+        </ProtectedRoute>} />
+        <Route path="/create-listing" element={<ProtectedRoute>
+          <CreateListingPage />
+        </ProtectedRoute>} />
+        <Route path="/chat" element={<ProtectedRoute>
+          <ChatPage />
+        </ProtectedRoute>} />
+        <Route path="/chat/:rentalId" element={<ProtectedRoute>
+          <ChatPage />
+        </ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute>
+          <ProfilePage />
+        </ProtectedRoute>} />
+        <Route path="/subscription" element={<ProtectedRoute>
+          <SubscriptionPage />
+        </ProtectedRoute>} />
+      </Routes>
+    </main>
 
-      {/* Mobile Navigation */}
-      {isAuthenticated && (<div className="md:hidden">
-          <MobileNav />
-        </div>)}
+    {/* Mobile Navigation */}
+    {isAuthenticated && (<div className="md:hidden">
+      <MobileNav />
+    </div>)}
 
-      <Toaster />
-    </div>);
+    <Toaster />
+  </div>);
 }
 export default function App() {
-    return (<AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </AuthProvider>);
+  return (<BrowserRouter>
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  </BrowserRouter>);
 }

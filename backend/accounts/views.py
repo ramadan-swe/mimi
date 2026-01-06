@@ -3,7 +3,8 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import (
     CustomTokenObtainPairSerializer,
-    UserRegistrationSerializer
+    UserRegistrationSerializer,
+    ProfileSerializer,
 )
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -21,3 +22,11 @@ class UserRegistrationView(generics.CreateAPIView):
             {"status": "success", "message": "User registered successfully."},
             status=status.HTTP_201_CREATED
         )
+
+
+class ProfileView(generics.RetrieveAPIView):
+    serializer_class = ProfileSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_object(self):
+        return self.request.user

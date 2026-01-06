@@ -18,6 +18,12 @@ RUN apt-get update && apt-get install -y \
 # Install uv for fast package installation and move to standard location
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+# Configure UV to use /opt/venv
+ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
+ENV UV_LINK_MODE=copy
+# Update PATH so python/uv commands use the venv
+ENV PATH="/opt/venv/bin:$PATH"
+
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
@@ -37,4 +43,4 @@ EXPOSE 8000
 ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Default command
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["uv", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]

@@ -22,6 +22,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-_6qugvdf%x_9%@=xs*3v_e=6695dys2&l_v=%bt(#%d)6aj_-z'
 
+# Twilio Configuration
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
+TWILIO_FROM_NUMBER = os.environ.get('TWILIO_FROM_NUMBER')
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

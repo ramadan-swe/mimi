@@ -21,6 +21,7 @@ distro==1.9.0
 django==5.2.9
 django-cors-headers==4.9.0
 django-extensions==4.1
+django-filter==25.2
 django-ratelimit==4.1.0
 djangorestframework==3.16.1
 djangorestframework-simplejwt==5.5.1
@@ -109,4 +110,5 @@ urllib3==2.6.2
 vine==5.1.0
 wcwidth==0.2.14
 werkzeug==3.1.4
+twilio==9.3.5
 wheel==0.45.1

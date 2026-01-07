@@ -3,7 +3,9 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     CustomTokenObtainPairView,
     UserRegistrationView,
-    ProfileView
+    ProfileView,
+    SendOTPView,
+    VerifyOTPView
 )
 
 urlpatterns = [
@@ -11,4 +13,6 @@ urlpatterns = [
     path('auth/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/profile/', ProfileView.as_view(), name='profile'),
+    path('auth/verify-phone/', SendOTPView.as_view(), name='verify-phone'),
+    path('auth/confirm-otp/', VerifyOTPView.as_view(), name='confirm-otp'),
 ]

@@ -39,18 +39,16 @@ def send_whatsapp_otp(phone_number):
         }
     )
 
-    # 4. Send via Twilio
-    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-    
-    # Twilio WhatsApp numbers need "whatsapp:" prefix
-    to_number = f"whatsapp:{phone_number}"
-    from_number = settings.TWILIO_FROM_NUMBER # e.g. 'whatsapp:+14155238886'
+    # 4. Send via Twilio SMS
+    account_sid = settings.TWILIO_ACCOUNT_SID
+    auth_token = settings.TWILIO_AUTH_TOKEN
+    client = Client(account_sid, auth_token)
     
     try:
         message = client.messages.create(
-            from_=from_number,
+            from_=settings.TWILIO_FROM_NUMBER,
             body=f"Your verification code for Mimi is: {otp_code}",
-            to=to_number
+            to=phone_number
         )
         return True, message.sid
     except Exception as e:

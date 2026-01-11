@@ -75,11 +75,18 @@ class VerifyOTPView(views.APIView):
             verification.is_verified = True
             verification.save()
             
-            # Also update User model if needed
-            user.is_verified_identity = True # Or is_phone_verified? 
-            # The prompt implied identity verification.
+            # Update phone verification status (NOT identity verification)
+            user.is_phone_verified = True
             user.save()
             
-            return Response({"message": "Phone verified successfully"}, status=status.HTTP_200_OK)
+            # Generate new tokens with updated user data
+            from rest_framework_simplejwt.tokens import RefreshToken
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                "message": "Phone verified successfully",
+                "access": str(refresh.access_token),
+                "refresh": str(refresh)
+            }, status=status.HTTP_200_OK)
             
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

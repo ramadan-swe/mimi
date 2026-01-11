@@ -121,7 +121,7 @@ class Vehicle(models.Model):
 
 
 class Listing(models.Model):
-    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='listings')
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='listings', null=True, blank=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='listings')
     title = models.CharField(max_length=200)
     daily_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])

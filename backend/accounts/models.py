@@ -15,6 +15,7 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
+    is_phone_verified = models.BooleanField(default=False)
     is_verified_identity = models.BooleanField(default=False)
     national_id_hash = models.CharField(max_length=64, unique=True, null=True, blank=True, db_index=True)
     waseet_score = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])

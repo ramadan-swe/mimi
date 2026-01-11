@@ -321,7 +321,7 @@
             if (!document.getElementById('messagesContainer').classList.contains('hidden')) {
                 const container = document.getElementById('messagesContainer');
                 const scrollPosition = container.scrollTop;
-                const isAtBottom = container.scrollHeight - container.scrollTop === container.clientHeight;
+                const isAtBottom = Math.abs(container.scrollHeight - container.scrollTop - container.clientHeight) < 1;
                 
                 displayMessages();
                 

@@ -20,3 +20,11 @@ def main():
 
 if __name__ == '__main__':
     main()
+class ListingImage(models.Model):
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='listings/%Y/%m/')
+    image_type = models.CharField(max_length=10, choices=ImageType.choices)
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']

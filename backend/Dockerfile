@@ -5,6 +5,7 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
+    git \
     postgresql-client \
     libpq-dev \
     libjpeg-dev \
@@ -48,7 +49,8 @@ RUN if [ -f requirements.txt ]; then \
     django-ratelimit \
     cryptography; \
     fi
-
+RUN git config --global url."https://github.com/".insteadOf git@"github.com:"
+RUN pip install git+https://github.com/pgvector/django-pgvector.git@v0.2.0
 # Copy project files
 COPY . .
 
@@ -66,3 +68,4 @@ ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Default command
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+

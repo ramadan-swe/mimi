@@ -19,19 +19,22 @@ function forceLogout() {
     window.dispatchEvent(new CustomEvent('auth:unauthorized'));
 }
 
-// Request Interceptor: Attach Token
+
+// Request interceptor to add auth token
 api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
 );
+
+// Token Refresh Logic
 let isRefreshing = false;
 let failedQueue = [];
 

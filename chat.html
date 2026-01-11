@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mimi Chat - تطبيق الدردشة</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            direction: rtl;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 600px;
+            height: 90vh;
+            max-height: 700px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .username-container {
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+        }
+
+        .username-container input {
+            padding: 10px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            width: 70%;
+            font-size: 16px;
+            margin-left: 10px;
+            text-align: right;
+        }
+
+        .username-container button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .username-container button:hover {
+            background: #764ba2;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-user {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .message-content {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word;
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-container input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 16px;
+            text-align: right;
+        }
+
+        .input-container input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-container button {
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .input-container button:hover {
+            background: #764ba2;
+        }
+
+        .input-container button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .clear-chat {
+            padding: 10px 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .clear-chat:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            💬 Mimi Chat - تطبيق الدردشة
+        </div>
+
+        <div class="username-container" id="usernameContainer">
+            <h3>أدخل اسمك للبدء</h3>
+            <input type="text" id="usernameInput" placeholder="اسمك هنا..." />
+            <button onclick="setUsername()">ابدأ الدردشة</button>
+        </div>
+
+        <div class="messages-container hidden" id="messagesContainer"></div>
+
+        <div class="input-container hidden" id="inputContainer">
+            <button onclick="sendMessage()" id="sendButton">إرسال</button>
+            <input 
+                type="text" 
+                id="messageInput" 
+                placeholder="اكتب رسالتك هنا..." 
+                onkeypress="handleKeyPress(event)"
+            />
+        </div>
+    </div>
+
+    <script>
+        let currentUser = '';
+        const STORAGE_KEY = 'mimi_chat_messages';
+
+        // Load messages from localStorage
+        function loadMessages() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        // Save messages to localStorage
+        function saveMessages(messages) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+        }
+
+        // Set username and start chat
+        function setUsername() {
+            const usernameInput = document.getElementById('usernameInput');
+            const username = usernameInput.value.trim();
+            
+            if (username) {
+                currentUser = username;
+                document.getElementById('usernameContainer').classList.add('hidden');
+                document.getElementById('messagesContainer').classList.remove('hidden');
+                document.getElementById('inputContainer').classList.remove('hidden');
+                
+                displayMessages();
+                document.getElementById('messageInput').focus();
+            } else {
+                alert('من فضلك أدخل اسمك');
+            }
+        }
+
+        // Display all messages
+        function displayMessages() {
+            const messages = loadMessages();
+            const container = document.getElementById('messagesContainer');
+            
+            container.innerHTML = '';
+            
+            messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                messageDiv.innerHTML = `
+                    <div class="message-user">${escapeHtml(msg.user)}</div>
+                    <div class="message-content">${escapeHtml(msg.text)}</div>
+                    <div class="message-time">${msg.time}</div>
+                `;
+                container.appendChild(messageDiv);
+            });
+
+            // Add clear chat button if there are messages
+            if (messages.length > 0) {
+                const clearButton = document.createElement('button');
+                clearButton.className = 'clear-chat';
+                clearButton.textContent = '🗑️ مسح المحادثة';
+                clearButton.onclick = clearChat;
+                container.appendChild(clearButton);
+            }
+
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Send message
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const messageText = messageInput.value.trim();
+            
+            if (messageText) {
+                const messages = loadMessages();
+                const newMessage = {
+                    user: currentUser,
+                    text: messageText,
+                    time: new Date().toLocaleTimeString('ar-EG', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    }),
+                    timestamp: Date.now()
+                };
+                
+                messages.push(newMessage);
+                saveMessages(messages);
+                
+                messageInput.value = '';
+                displayMessages();
+            }
+        }
+
+        // Handle Enter key press
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Clear all chat messages
+        function clearChat() {
+            if (confirm('هل أنت متأكد من مسح جميع الرسائل؟')) {
+                localStorage.removeItem(STORAGE_KEY);
+                displayMessages();
+            }
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Auto-refresh messages every 2 seconds to show new messages from other users
+        setInterval(() => {
+            if (!document.getElementById('messagesContainer').classList.contains('hidden')) {
+                const container = document.getElementById('messagesContainer');
+                const scrollPosition = container.scrollTop;
+                const isAtBottom = Math.abs(container.scrollHeight - container.scrollTop - container.clientHeight) < 1;
+                
+                displayMessages();
+                
+                // Only auto-scroll if user was at the bottom
+                if (isAtBottom) {
+                    container.scrollTop = container.scrollHeight;
+                } else {
+                    container.scrollTop = scrollPosition;
+                }
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

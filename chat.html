@@ -249,7 +249,7 @@
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'message';
                 messageDiv.innerHTML = `
-                    <div class="message-user">${msg.user}</div>
+                    <div class="message-user">${escapeHtml(msg.user)}</div>
                     <div class="message-content">${escapeHtml(msg.text)}</div>
                     <div class="message-time">${msg.time}</div>
                 `;

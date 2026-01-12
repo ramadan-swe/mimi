@@ -150,29 +150,11 @@ export const authAPI = {
     },
     // POST /api/auth/verify-phone/
     sendWhatsAppOTP: async (phone_number) => {
-        // Mock response
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({
-                    status: 'sent',
-                    expires_in: 600,
-                    message: 'WhatsApp verification code sent',
-                });
-            }, 800);
-        });
+        return api.post('/api/auth/verify-phone/', { phone_number });
     },
     // POST /api/auth/confirm-otp/
     confirmOTP: async (phone_number, otp_code) => {
-        // Mock response
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                if (otp_code === '123456') {
-                    resolve({ status: 'verified' });
-                } else {
-                    reject({ error: 'Invalid code', attempts_remaining: 2 });
-                }
-            }, 500);
-        });
+        return api.post('/api/auth/confirm-otp/', { phone_number, otp_code });
     },
     // POST /api/auth/veriff/create-session/
     createVeriffSession: async () => {

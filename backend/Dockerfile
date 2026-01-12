@@ -1,4 +1,7 @@
-FROM python:3.11-slim
+FROM python:3.12-slim-trixie
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
@@ -14,43 +17,17 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv for fast package installation and move to standard location
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
-    mv /root/.local/bin/uv /usr/local/bin/uv && \
-    uv --version
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Copy requirements file
-COPY requirements.txt* ./
+# Configure UV to use /opt/venv
+ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
+ENV UV_LINK_MODE=copy
+# Update PATH so python/uv commands use the venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-# Install Python dependencies
-# If requirements.txt exists, use it; otherwise install core packages
-RUN if [ -f requirements.txt ]; then \
-    uv pip install --system -r requirements.txt; \
-    else \
-    uv pip install --system \
-    Django \
-    djangorestframework \
-    djangorestframework-simplejwt \
-    psycopg2-binary \
-    pgvector \
-    Pillow \
-    celery \
-    redis \
-    openai \
-    firebase-admin \
-    requests \
-    sendgrid \
-    django-cors-headers \
-    Faker \
-    pytest \
-    pytest-django \
-    factory-boy \
-    django-extensions \
-    ipython \
-    django-ratelimit \
-    cryptography; \
-    fi
-RUN git config --global url."https://github.com/".insteadOf git@"github.com:"
-RUN pip install git+https://github.com/pgvector/django-pgvector.git@v0.2.0
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
+
 # Copy project files
 COPY . .
 
@@ -67,5 +44,4 @@ EXPOSE 8000
 ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Default command
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-
+CMD ["uv", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]

@@ -1,4 +1,3 @@
-
 services:
   # PostgreSQL with pgvector extension
   db:
@@ -13,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,7 +26,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -38,7 +37,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: mimi_backend
-    command: python manage.py runserver 0.0.0.0:8000
+    command: uv run python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend:/app
       - media_files:/app/media
@@ -68,7 +67,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: mimi_celery
-    command: celery -A config worker -l info
+    command: uv run celery -A config worker -l info
     volumes:
       - ./backend:/app
     environment:
@@ -91,7 +90,7 @@ services:
     command: npm run dev -- --host 0.0.0.0
     volumes:
       - ./frontend:/app
-      - /app/node_modules  # Prevent overwriting node_modules
+      - /app/node_modules # Prevent overwriting node_modules
     ports:
       - "3000:3000"
     environment:

@@ -13,7 +13,7 @@ const ChatPage = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
-  
+
   const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
     headers: {
@@ -36,9 +36,9 @@ const ChatPage = () => {
   const loadChatRooms = async () => {
     try {
       const response = await api.get('/api/chat/rooms/');
-      setRooms(response.data);
-      if (response.data.length > 0 && !selectedRoom) {
-        setSelectedRoom(response.data[0]);
+      setRooms(response.data.results);
+      if (response.data.count > 0 && !selectedRoom) {
+        setSelectedRoom(response.data.results[0]);
       }
     } catch (error) {
       console.error('Error loading chat rooms:', error);
@@ -60,15 +60,15 @@ const ChatPage = () => {
 
   const sendMessage = async (content) => {
     if (!selectedRoom || !content.trim() || !user) return;
-    
+
     try {
       const response = await api.post('/api/chat/messages/', {
         chat_room: selectedRoom.id,
         content: content
       });
-      
+
       setMessages(prev => [...prev, response.data]);
-      
+
       // Update room's last message
       setRooms(prev => prev.map(room => {
         if (room.id === selectedRoom.id) {
@@ -119,7 +119,7 @@ const ChatPage = () => {
           currentUser={user}
         />
       </div>
-      
+
       <div className="flex-1 flex flex-col">
         {selectedRoom ? (
           <>
@@ -127,23 +127,23 @@ const ChatPage = () => {
               messages={messages}
               currentUser={user}
               otherUser={
-                selectedRoom.renter.id === user.id 
-                  ? selectedRoom.owner 
+                selectedRoom.renter.id === user.id
+                  ? selectedRoom.owner
                   : selectedRoom.renter
               }
               messagesEndRef={messagesEndRef}
             />
-            
+
             <ChatInput onSendMessage={sendMessage} />
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <h3 className="text-lg font-medium text-gray-900">
-                لا توجد محادثات
+                No conversations yet
               </h3>
               <p className="mt-1 text-sm text-gray-500">
-                ابدأ محادثة جديدة من صفحة العقار
+                Start a conversation by messaging a property owner
               </p>
             </div>
           </div>

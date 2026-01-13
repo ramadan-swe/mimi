@@ -1,7 +1,8 @@
 from django.db import models
-from accounts.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from pgvector.django import VectorField
+
+from django.conf import settings
 
 
 class TransmissionType(models.TextChoices):
@@ -100,7 +101,7 @@ class Governorate(models.TextChoices):
 
 
 class Vehicle(models.Model):
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vehicles')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='vehicles')
     brand = models.CharField(max_length=50) # e.g., Toyota, Hyundai, Nissan
     model = models.CharField(max_length=50)
     year = models.IntegerField(validators=[MinValueValidator(1990), MaxValueValidator(2025)])
@@ -122,7 +123,7 @@ class Vehicle(models.Model):
 
 class Listing(models.Model):
     vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='listings', null=True, blank=True)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='listings')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='listings')
     title = models.CharField(max_length=200)
     daily_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     weekly_discount = models.DecimalField(max_digits=5, decimal_places=2, default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # Percentage
@@ -143,19 +144,6 @@ class Listing(models.Model):
         return self.title
 
 
-class VehicleImage(models.Model):
-    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='vehicles/%Y/%m/')
-    image_type = models.CharField(max_length=10, choices=ImageType.choices)
-    order = models.IntegerField(default=0)
-
-    class Meta:
-        ordering = ['order']
-        constraints = [
-            models.UniqueConstraint(fields=['vehicle', 'image_type'], name='unique_vehicle_image_type')
-        ]
-
-
 class ListingImage(models.Model):
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='listings/%Y/%m/')
@@ -169,7 +157,7 @@ class ListingImage(models.Model):
         ]
 
 class RentalRequest(models.Model):
-    renter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rental_requests')
+    renter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='rental_requests')
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='requests')
     start_date = models.DateField()
     end_date = models.DateField()
@@ -183,8 +171,9 @@ class RentalRequest(models.Model):
 
 class Review(models.Model):
     transaction = models.ForeignKey(RentalRequest, on_delete=models.CASCADE, related_name='reviews')
-    reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_given')
+    reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews_given')
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    embedding = VectorField(dimensions=1536, null=True, blank=True) # Using pgvector extension for AI search
     comment = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

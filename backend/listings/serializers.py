@@ -1,15 +1,8 @@
 from rest_framework import serializers
-from .models import Vehicle, VehicleImage, Listing, ListingImage
-
-
-class VehicleImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = VehicleImage
-        fields = ['id', 'image', 'image_type', 'order']
+from .models import Vehicle, Listing, ListingImage
 
 
 class VehicleSerializer(serializers.ModelSerializer):
-    images = VehicleImageSerializer(many=True, read_only=True)
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:

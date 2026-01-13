@@ -1,18 +1,11 @@
 from django.contrib import admin
-from django.contrib.auth import get_user_model
-from .models import Vehicle, VehicleImage, Listing, ListingImage, RentalRequest, Review
+from .models import Vehicle, Listing, ListingImage, RentalRequest, Review
 
-User = get_user_model()
 
 @admin.register(Vehicle)
 class VehicleAdmin(admin.ModelAdmin):
     list_display = ['__str__', 'owner', 'brand', 'model', 'year', 'transmission', 'fuel_type', 'seats']
     search_fields = ['brand', 'model', 'owner__email']
-
-
-class VehicleImageInline(admin.TabularInline):
-    model = VehicleImage
-    extra = 1
 
 
 @admin.register(Listing)

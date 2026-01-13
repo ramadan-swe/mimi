@@ -1,8 +1,6 @@
 from django.db import models
 from django.conf import settings
-from django.contrib.auth import get_user_model
 
-User = get_user_model()
 
 class ChatRoom(models.Model):
     listing = models.ForeignKey('listings.Listing', on_delete=models.CASCADE, null=True, blank=True)

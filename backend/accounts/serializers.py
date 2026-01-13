@@ -58,11 +58,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        subscription = Subscription.objects.get(name='Free')
         instance = self.Meta.model(**validated_data)
         instance.set_password(validated_data['password'])
         instance.role = 'RENTER'
         instance.is_verified_identity = False
         instance.waseet_score = 0
+        instance.active_subscription = UserSubscription.objects.create(user=instance, subscription=subscription)
         instance.save()
         return instance
 

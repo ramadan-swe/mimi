@@ -30,7 +30,7 @@ export const signUpSchema = yup.object().shape({
   phone_number: yup
     .string()
     .required('Phone number is required')
-    .matches(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format'),
+    .matches(/^\+?[1-9]\d{9,14}$/, 'Phone number must be 10-15 digits'),
   password: yup
     .string()
     .required('Password is required')

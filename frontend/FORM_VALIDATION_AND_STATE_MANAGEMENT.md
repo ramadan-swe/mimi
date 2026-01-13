@@ -10,10 +10,10 @@ This document describes the implementation of Yup for form validation and Redux 
 
 The following npm packages were installed:
 
-- **yup** (^1.x.x): Schema validation library
-- **@hookform/resolvers** (^3.x.x): Integration between react-hook-form and Yup
-- **@reduxjs/toolkit** (^2.x.x): Modern Redux with simplified API
-- **react-redux** (^9.x.x): React bindings for Redux
+- **yup** (^1.7.1): Schema validation library
+- **@hookform/resolvers** (^5.2.2): Integration between react-hook-form and Yup
+- **@reduxjs/toolkit** (^2.11.2): Modern Redux with simplified API
+- **react-redux** (^9.2.0): React bindings for Redux
 
 ### 2. Validation Schemas
 

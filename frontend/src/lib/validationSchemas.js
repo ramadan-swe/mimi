@@ -30,6 +30,8 @@ export const signUpSchema = yup.object().shape({
   phone_number: yup
     .string()
     .required('Phone number is required')
+    // Matches international format: optional +, then 1-9 followed by 9-14 more digits (total 10-15 digits)
+    // Examples: +201234567890 (13 digits), +15551234567 (11 digits), 15551234567 (11 digits)
     .matches(/^\+?[1-9]\d{9,14}$/, 'Phone number must be 10-15 digits'),
   password: yup
     .string()

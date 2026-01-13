@@ -13,7 +13,6 @@ import os
 from pathlib import Path
 from datetime import timedelta
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -29,10 +28,19 @@ TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
 TWILIO_FROM_NUMBER = os.environ.get('TWILIO_FROM_NUMBER')
 
+# Paymob Configuration
+PAYMOB_API_KEY = os.environ.get('PAYMOB_API_KEY', '')
+# Support both PAYMOB_INTEGRATION_ID and INTEGRATION_ID for backwards compatibility
+PAYMOB_INTEGRATION_ID = int(os.environ.get('PAYMOB_INTEGRATION_ID', os.environ.get('INTEGRATION_ID', '0')))
+# Support both PAYMOB_IFRAME_ID and IFRAME_ID for backwards compatibility
+PAYMOB_IFRAME_ID = int(os.environ.get('PAYMOB_IFRAME_ID', os.environ.get('IFRAME_ID', '0')))
+PAYMOB_SECRET_KEY = os.environ.get('PAYMOB_SECRET_KEY')
+PAYMOB_PUBLIC_KEY = os.environ.get('PAYMOB_PUBLIC_KEY')
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -146,8 +154,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+# Media files (User uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -199,3 +211,12 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+# from celery.schedules import crontab
+
+# CELERY_BEAT_SCHEDULE = {
+#     'check-renewals-every-30-minutes': {
+#         'task': 'run_subscription_renewals',
+#         'schedule': crontab(minute='*/30'), 
+#     },
+# }

@@ -9,6 +9,17 @@ User = get_user_model()
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Custom JWT token serializer that accepts email (since USERNAME_FIELD is 'email')
+    """
+    username_field = 'email'  # Use email as the username field
+    
+    def validate(self, attrs):
+        # Map 'email' to 'username' if provided (for compatibility)
+        if 'email' in attrs and 'username' not in attrs:
+            attrs['username'] = attrs['email']
+        return super().validate(attrs)
+    
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)

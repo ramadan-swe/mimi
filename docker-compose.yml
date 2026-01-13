@@ -41,6 +41,7 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend:/app
+      - static_files:/app/static
       - media_files:/app/media
     ports:
       - "8000:8000"
@@ -106,4 +107,5 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  static_files:
   media_files:

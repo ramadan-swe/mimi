@@ -35,7 +35,7 @@ const ChatPage = () => {
 
   const loadChatRooms = async () => {
     try {
-      const response = await api.get('/chat/rooms/');
+      const response = await api.get('/api/chat/rooms/');
       setRooms(response.data);
       if (response.data.length > 0 && !selectedRoom) {
         setSelectedRoom(response.data[0]);
@@ -51,7 +51,7 @@ const ChatPage = () => {
 
   const loadMessages = async (roomId) => {
     try {
-      const response = await api.get(`/chat/rooms/${roomId}/messages/`);
+      const response = await api.get(`/api/chat/rooms/${roomId}/messages/`);
       setMessages(response.data);
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -62,7 +62,7 @@ const ChatPage = () => {
     if (!selectedRoom || !content.trim() || !user) return;
     
     try {
-      const response = await api.post('/chat/messages/', {
+      const response = await api.post('/api/chat/messages/', {
         chat_room: selectedRoom.id,
         content: content
       });

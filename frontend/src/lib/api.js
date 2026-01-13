@@ -210,7 +210,7 @@ export const rentalsAPI = {
     },
     // GET /api/rentals/incoming/
     getIncoming: async () => {
-        return api.get('/api/rentals/incoming/');
+        return api.get('/rentals/incoming/');
     },
     // POST /api/rentals/{id}/accept/
     accept: async (id) => {
@@ -252,8 +252,26 @@ export const reviewsAPI = {
 
 // PAYMENTS ENDPOINTS (Paymob Integration)
 export const paymentsAPI = {
-    createCheckout: async (subscriptionTier) => {
-        return api.post('/api/payments/create-checkout/', { subscription_tier: subscriptionTier });
+    // 1. Updated endpoint and key name (plan_id)
+    createCheckout: async (planId) => {
+        return api.post('api/payments/subscribe/', { plan_id: planId });
+    },
+    // 2. Updated to match router.register(r'plans', ...)
+    getSubscriptions: async () => {
+        return api.get('api/payments/plans/');
+    },
+    getTransactions: async () => {
+        return api.get('api/payments/transactions/');
+    },
+    verifyPayment: async (transactionId) => {
+        return api.get(`api/payments/verify/${transactionId}/`);
+    },
+    getCurrentSubscription: async () => {
+        return api.get('api/payments/subscription/current/');
+    },
+    // 3. Updated to use the unified manage endpoint
+    cancelSubscription: async () => {
+        return api.post('api/payments/manage/', { action: 'cancel' });
     },
 };
 

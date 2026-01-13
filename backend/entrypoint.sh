@@ -5,6 +5,10 @@ set -e
 if [ -f "manage.py" ]; then
     echo "⏳ Running migrations..."
     uv run python manage.py migrate --noinput || true
+
+    # Collect static files
+    echo "📦 Collecting static files..."
+    python manage.py collectstatic --noinput || true
 fi
 
 # create vector extension if not exists

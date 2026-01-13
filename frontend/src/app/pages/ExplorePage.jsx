@@ -4,13 +4,19 @@ import SearchHeader from '../components/search/SearchHeader';
 import AvailabilityBar from '../components/search/AvailabilityBar';
 import FilterSidebar from '../components/search/FilterSidebar';
 import CarCard from '../components/listings/CarCard';
-import { mockListings } from '../../lib/mockData';
+import { listingsAPI } from '../../lib/api';
 import { Button } from '../components/ui/button';
-import { SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '../components/ui/sheet';
+
+const PAGE_SIZE = 20;
+
 export default function ExplorePage() {
     const [searchParams, setSearchParams] = useSearchParams();
-    const [listings, setListings] = useState(mockListings);
+    const [listings, setListings] = useState([]);
+    const [totalCount, setTotalCount] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [loading, setLoading] = useState(true);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [startDate, setStartDate] = useState();
     const [endDate, setEndDate] = useState();
@@ -28,36 +34,67 @@ export default function ExplorePage() {
     // Read AI search params
     const aiEnabled = searchParams.get('ai_enabled') === 'true';
     const aiQuery = searchParams.get('ai_query') || '';
+
     useEffect(() => {
-        // Apply filters to listings
-        let filtered = mockListings;
-        if (filters.governorate && filters.governorate !== '#') {
-            filtered = filtered.filter(l => l.governorate === filters.governorate);
-        }
-        if (filters.price_max) {
-            filtered = filtered.filter(l => l.price_per_day <= parseInt(filters.price_max));
-        }
-        if (filters.transmission) {
-            const transmissions = filters.transmission.split(',');
-            filtered = filtered.filter(l => transmissions.includes(l.transmission));
-        }
-        if (filters.fuel_type) {
-            const fuelTypes = filters.fuel_type.split(',');
-            filtered = filtered.filter(l => fuelTypes.includes(l.fuel_type));
-        }
-        if (filters.category) {
-            const categories = filters.category.split(',');
-            filtered = filtered.filter(l => categories.includes(l.category));
-        }
-        if (filters.features) {
-            const requiredFeatures = filters.features.split(',');
-            filtered = filtered.filter(l => requiredFeatures.every(feature => l.features.includes(feature)));
-        }
-        if (filters.waseet_score_min) {
-            filtered = filtered.filter(l => l.waseet_score >= parseInt(filters.waseet_score_min));
-        }
-        setListings(filtered);
+        const fetchListings = async () => {
+            try {
+                setLoading(true);
+                // Build API params from URL filters with pagination
+                const offset = (currentPage - 1) * PAGE_SIZE;
+                const params = { limit: PAGE_SIZE, offset };
+                if (filters.governorate && filters.governorate !== '#') {
+                    params.governorate = filters.governorate;
+                }
+                if (filters.transmission) {
+                    params.vehicle__transmission = filters.transmission;
+                }
+                if (filters.fuel_type) {
+                    params.vehicle__fuel_type = filters.fuel_type;
+                }
+                if (filters.category) {
+                    params.vehicle__category = filters.category;
+                }
+                
+                const response = await listingsAPI.getAll(params);
+            
+                let data = response?.results || response || [];
+                const count = response?.count || data.length;
+                
+                // Client-side filtering for fields not supported by API
+                if (filters.price_max) {
+                    data = data.filter(l => parseFloat(l.daily_price) <= parseInt(filters.price_max));
+                }
+                
+                // Filter by waseet_score_min
+                if (filters.waseet_score_min) {
+                    const minScore = parseInt(filters.waseet_score_min);
+                    data = data.filter(l => (l.owner?.waseet_score || 0) >= minScore);
+                }
+                
+                setListings(data);
+                setTotalCount(count);
+            } catch (error) {
+                console.error('Error fetching listings:', error);
+                setListings([]);
+                setTotalCount(0);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchListings();
+    }, [searchParams, currentPage]);
+
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
     }, [searchParams]);
+
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
     const handleFilterChange = (newFilters) => {
         const params = new URLSearchParams(searchParams);
         Object.entries(newFilters).forEach(([key, value]) => {
@@ -126,7 +163,7 @@ export default function ExplorePage() {
                         {/* Mobile Filter Button */}
                         <div className="lg:hidden mb-4 flex justify-between items-center">
                             <h2 className="text-xl font-semibold">
-                                {listings.length} Cars Available
+                                {totalCount} Cars Available
                             </h2>
                             <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                                 <SheetTrigger asChild>
@@ -146,7 +183,7 @@ export default function ExplorePage() {
                         {/* Results Count (Desktop) */}
                         <div className="hidden lg:block mb-6">
                             <h2 className="text-2xl font-semibold text-gray-900">
-                                {listings.length} Cars Available
+                                {totalCount} Cars Available
                             </h2>
                             <p className="text-gray-600 mt-1">
                                 Find the perfect car for your journey
@@ -170,9 +207,72 @@ export default function ExplorePage() {
                             </div>)}
 
                         {/* Listings Grid */}
-                        {listings.length > 0 ? (<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                {listings.map((listing) => (<CarCard key={listing.id} listing={listing}/>))}
-                            </div>) : (<div className="text-center py-12">
+                        {loading ? (
+                            <div className="flex items-center justify-center py-12">
+                                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                            </div>
+                        ) : listings.length > 0 ? (
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                    {listings.map((listing) => (<CarCard key={listing.id} listing={listing}/>))}
+                                </div>
+                                
+                                {/* Pagination */}
+                                {totalPages > 1 && (
+                                    <div className="flex items-center justify-center gap-2 mt-8">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handlePageChange(currentPage - 1)}
+                                            disabled={currentPage === 1}
+                                        >
+                                            <ChevronLeft className="h-4 w-4" />
+                                            Previous
+                                        </Button>
+                                        
+                                        <div className="flex items-center gap-1">
+                                            {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                                .filter(page => {
+                                                    // Show first, last, current, and nearby pages
+                                                    return page === 1 || 
+                                                           page === totalPages || 
+                                                           Math.abs(page - currentPage) <= 1;
+                                                })
+                                                .map((page, index, arr) => (
+                                                    <span key={page} className="flex items-center">
+                                                        {index > 0 && arr[index - 1] !== page - 1 && (
+                                                            <span className="px-2 text-gray-400">...</span>
+                                                        )}
+                                                        <Button
+                                                            variant={currentPage === page ? "default" : "outline"}
+                                                            size="sm"
+                                                            onClick={() => handlePageChange(page)}
+                                                            className="min-w-[40px]"
+                                                        >
+                                                            {page}
+                                                        </Button>
+                                                    </span>
+                                                ))}
+                                        </div>
+                                        
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handlePageChange(currentPage + 1)}
+                                            disabled={currentPage === totalPages}
+                                        >
+                                            Next
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                )}
+                                
+                                {/* Page info */}
+                                <p className="text-center text-sm text-gray-500 mt-4">
+                                    Showing {(currentPage - 1) * PAGE_SIZE + 1} - {Math.min(currentPage * PAGE_SIZE, totalCount)} of {totalCount} cars
+                                </p>
+                            </>
+                        ) : (<div className="text-center py-12">
                                 <p className="text-gray-500 text-lg">No cars found matching your criteria</p>
                                 <Button variant="outline" className="mt-4" onClick={() => setSearchParams(new URLSearchParams())}>
                                     Clear All Filters

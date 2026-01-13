@@ -6,31 +6,29 @@
  */
 /**
  * Sahel Summer Intent
- * High-rated AC and trunk space + SUV category
+ * SUVs and premium cars in Alexandria/Red Sea areas
  * Perfect for beach trips with family/friends
  */
 export function getSahelSummerParams() {
     return {
-        category: 'SUV',
-        features: 'Air Conditioning,Large Trunk',
-        waseet_score_min: '85',
+        governorate: 'Alexandria',
+        category: 'PREMIUM,TOP',
     };
 }
 /**
  * Cairo Commuter Intent
- * Economy + Petrol-efficient + Compact
+ * Economy + Base/Mid Line cars in Cairo
  * Ideal for daily city driving
  */
 export function getCairoCommuterParams() {
     return {
-        category: 'Economy,Compact',
-        fuel_type: 'Petrol',
         governorate: 'Cairo',
+        category: 'BASE,MID',
     };
 }
 /**
  * Elite Selection Intent
- * Filter for Waseet Score > 95
+ * Filter for Waseet Score >= 95
  * Top-tier hosts only
  */
 export function getEliteSelectionParams() {
@@ -58,7 +56,7 @@ export const PREBAKED_INTENTS = {
     sahelSummer: {
         id: 'sahel-summer',
         title: 'Sahel Summer',
-        description: 'Beach-ready SUVs with AC & trunk space',
+        description: 'Premium cars in Alexandria for beach trips',
         icon: '🏖️',
         gradient: 'from-blue-400 to-cyan-500',
         getParams: getSahelSummerParams,
@@ -66,7 +64,7 @@ export const PREBAKED_INTENTS = {
     cairoCommuter: {
         id: 'cairo-commuter',
         title: 'Cairo Commuter',
-        description: 'Fuel-efficient economy cars for city driving',
+        description: 'Affordable cars in Cairo for daily driving',
         icon: '🚗',
         gradient: 'from-green-400 to-emerald-500',
         getParams: getCairoCommuterParams,

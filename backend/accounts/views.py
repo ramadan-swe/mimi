@@ -6,7 +6,8 @@ from .serializers import (
     UserRegistrationSerializer,
     ProfileSerializer,
     PhoneVerificationSerializer,
-    OTPConfirmationSerializer
+    OTPConfirmationSerializer,
+    PublicUserSerializer
 )
 from .services import send_whatsapp_otp
 from django.contrib.auth import get_user_model
@@ -90,3 +91,11 @@ class VerifyOTPView(views.APIView):
             }, status=status.HTTP_200_OK)
             
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PublicUserProfileView(generics.RetrieveAPIView):
+    """Public user profile view - shows limited info about a user"""
+    serializer_class = PublicUserSerializer
+    permission_classes = [permissions.AllowAny]
+    queryset = User.objects.all()
+    lookup_field = 'pk'

@@ -200,29 +200,37 @@ export const listingsAPI = {
     delete: async (id) => {
         return api.delete(`/api/listings/${id}/`);
     },
+    // GET /api/listings/{id}/availability/unavailable-dates/
+    getUnavailableDates: async (listingId) => {
+        return api.get(`/api/listings/${listingId}/availability/unavailable-dates/`);
+    },
 };
 
 // RENTALS ENDPOINTS
 export const rentalsAPI = {
-    // POST /api/rentals/request/
+    // POST /api/listings/rentals/
     createRequest: async (data) => {
-        return api.post('/api/rentals/request/', data);
+        return api.post('/api/listings/rentals/', data);
     },
-    // GET /api/rentals/incoming/
+    // GET /api/listings/rentals/ - Get user's rental requests (as renter)
+    getMyRequests: async () => {
+        return api.get('/api/listings/rentals/');
+    },
+    // GET /api/listings/rentals/incoming/ - Get incoming requests (as owner)
     getIncoming: async () => {
-        return api.get('/rentals/incoming/');
+        return api.get('/api/listings/rentals/incoming/');
     },
-    // POST /api/rentals/{id}/accept/
+    // POST /api/listings/rentals/{id}/accept/
     accept: async (id) => {
-        return api.post(`/api/rentals/${id}/accept/`);
+        return api.post(`/api/listings/rentals/${id}/accept/`);
     },
-    // POST /api/rentals/{id}/reject/
+    // POST /api/listings/rentals/{id}/reject/
     reject: async (id) => {
-        return api.post(`/api/rentals/${id}/reject/`);
+        return api.post(`/api/listings/rentals/${id}/reject/`);
     },
-    // POST /api/rentals/{id}/confirm/
-    confirm: async (id) => {
-        return api.post(`/api/rentals/${id}/confirm/`);
+    // POST /api/listings/rentals/{id}/cancel/
+    cancel: async (id) => {
+        return api.post(`/api/listings/rentals/${id}/cancel/`);
     },
 };
 
@@ -275,6 +283,14 @@ export const paymentsAPI = {
     },
 };
 
+// USERS ENDPOINTS
+export const usersAPI = {
+    // GET /api/users/{id}/ - Public user profile
+    getById: async (userId) => {
+        return api.get(`/api/users/${userId}/`);
+    },
+};
+
 export default {
     auth: authAPI,
     listings: listingsAPI,
@@ -282,4 +298,5 @@ export default {
     chat: chatAPI,
     reviews: reviewsAPI,
     payments: paymentsAPI,
+    users: usersAPI,
 };

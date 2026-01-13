@@ -18,6 +18,7 @@ import CreateListingPage from './pages/CreateListingPage';
 import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage';
 import SubscriptionPage from './pages/SubscriptionPage';
+import UserProfilePage from './pages/UserProfilePage';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -41,6 +42,7 @@ function AppRoutes() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/listings/:id" element={<ListingDetailPage />} />
+          <Route path="/user/:userId" element={<UserProfilePage />} />
           <Route path="/dashboard" element={<ProtectedRoute><OwnerDashboard /></ProtectedRoute>} />
           <Route path="/create-listing" element={<ProtectedRoute><CreateListingPage /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />

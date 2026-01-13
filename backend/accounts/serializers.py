@@ -24,6 +24,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
 
+        token['id'] = user.id
+        token['user_id'] = user.id
         token['role'] = user.role
         token['email'] = user.email
         token['is_phone_verified'] = user.is_phone_verified
@@ -119,3 +121,11 @@ class OTPConfirmationSerializer(serializers.Serializer):
             raise serializers.ValidationError("OTP code expired.")
             
         return attrs
+
+
+class PublicUserSerializer(serializers.ModelSerializer):
+    """Serializer for public user profile (limited info)"""
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'waseet_score', 'date_joined']
+        read_only_fields = fields

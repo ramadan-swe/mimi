@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { signUpSchema } from '../../lib/validationSchemas';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../components/ui/button';
@@ -9,7 +11,9 @@ import { Card } from '../components/ui/card';
 import { Car } from 'lucide-react';
 import { toast } from 'sonner';
 export default function SignUpPage() {
-  const { register: registerForm, handleSubmit, watch, formState: { errors } } = useForm();
+  const { register: registerForm, handleSubmit, formState: { errors } } = useForm({
+    resolver: yupResolver(signUpSchema),
+  });
   const [isLoading, setIsLoading] = useState(false);
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
@@ -18,20 +22,18 @@ export default function SignUpPage() {
     setIsLoading(true);
     try {
       // Remove confirm_password before sending to API
-      const { confirm_password, ...apiData } = data;
+      const { confirm_password: _confirm_password, ...apiData } = data;
       await registerUser(apiData);
       toast.success('Account created successfully! Please verify your phone.');
       navigate('/login');
     }
-    catch (error) {
+    catch {
       toast.error('Registration failed. Please try again.');
     }
     finally {
       setIsLoading(false);
     }
   };
-
-  const password = watch("password", "");
 
   return (<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-12">
     <Card className="w-full max-w-md p-8 space-y-6">
@@ -53,7 +55,7 @@ export default function SignUpPage() {
             <Label htmlFor="first_name">First Name</Label>
             <Input
               id="first_name"
-              {...registerForm("first_name", { required: "First name is required" })}
+              {...registerForm("first_name")}
             />
             {errors.first_name && <p className="text-sm text-red-500">{errors.first_name.message}</p>}
           </div>
@@ -61,7 +63,7 @@ export default function SignUpPage() {
             <Label htmlFor="last_name">Last Name</Label>
             <Input
               id="last_name"
-              {...registerForm("last_name", { required: "Last name is required" })}
+              {...registerForm("last_name")}
             />
             {errors.last_name && <p className="text-sm text-red-500">{errors.last_name.message}</p>}
           </div>
@@ -72,13 +74,7 @@ export default function SignUpPage() {
           <Input
             id="email"
             type="email"
-            {...registerForm("email", {
-              required: "Email is required",
-              pattern: {
-                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: "Invalid email address"
-              }
-            })}
+            {...registerForm("email")}
           />
           {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
         </div>
@@ -89,13 +85,7 @@ export default function SignUpPage() {
             id="phone_number"
             type="tel"
             placeholder="+20XXXXXXXXXX"
-            {...registerForm("phone_number", {
-              required: "Phone number is required",
-              pattern: {
-                value: /^\+?[1-9]\d{1,14}$/,
-                message: "Invalid phone number format"
-              }
-            })}
+            {...registerForm("phone_number")}
           />
           {errors.phone_number && <p className="text-sm text-red-500">{errors.phone_number.message}</p>}
         </div>
@@ -105,13 +95,7 @@ export default function SignUpPage() {
           <Input
             id="password"
             type="password"
-            {...registerForm("password", {
-              required: "Password is required",
-              minLength: {
-                value: 8,
-                message: "Password must be at least 8 characters"
-              }
-            })}
+            {...registerForm("password")}
           />
           {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
         </div>
@@ -121,10 +105,7 @@ export default function SignUpPage() {
           <Input
             id="confirm_password"
             type="password"
-            {...registerForm("confirm_password", {
-              required: "Please confirm your password",
-              validate: value => value === password || "Passwords do not match"
-            })}
+            {...registerForm("confirm_password")}
           />
           {errors.confirm_password && <p className="text-sm text-red-500">{errors.confirm_password.message}</p>}
         </div>

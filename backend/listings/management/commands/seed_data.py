@@ -255,7 +255,7 @@ class Command(BaseCommand):
             'back.png': ('BACK', 1),
             'back-left.png': ('LEFT', 2),
             'back-right.png': ('RIGHT', 3),
-            'right-side.png': ('RIGHT', 4),
+            'right-side.png': ('FRONT', 4),
             'inner-car.png': ('INTERIOR', 5),
         }
         

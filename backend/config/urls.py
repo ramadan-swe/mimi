@@ -28,4 +28,4 @@ urlpatterns = [
     path("api/chat/", include("chat.urls")),
     path('api/', include('accounts.urls')),
     path('api/listings/', include('listings.urls')),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

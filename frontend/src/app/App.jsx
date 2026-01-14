@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '../contexts/AuthContext'; // Up to src, then contexts
 import { Toaster } from './components/ui/sonner'; // Inside app folder
+import { Toaster as HotToaster } from 'react-hot-toast';
 
 // Layout Components
 import Navbar from './components/layout/Navbar';
@@ -46,13 +47,14 @@ function AppRoutes() {
           <Route path="/dashboard" element={<ProtectedRoute><OwnerDashboard /></ProtectedRoute>} />
           <Route path="/create-listing" element={<ProtectedRoute><CreateListingPage /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-          <Route path="/chat/:rentalId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+          <Route path="/chat/:roomId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/subscription" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
         </Routes>
       </main>
       {isAuthenticated && <div className="md:hidden"><MobileNav /></div>}
       <Toaster position="top-center" richColors />
+      <HotToaster position="top-center" />
     </div>
   );
 }

@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from notifications.models import PhoneVerification
 from django.utils import timezone
+from payments.models import Subscription, UserSubscription
 
 User = get_user_model()
 
@@ -60,13 +61,33 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        subscription = Subscription.objects.get(name='Free')
+        from decimal import Decimal
+        from datetime import timedelta
+        # Get or create Free subscription
+        subscription, _ = Subscription.objects.get_or_create(
+            name='Free',
+            defaults={
+                'max_listings': 3,
+                'price': Decimal('0.00'),
+                'period': 'MONTHLY',
+                'features': {},
+            }
+        )
         instance = self.Meta.model(**validated_data)
         instance.set_password(validated_data['password'])
         instance.role = 'RENTER'
         instance.is_verified_identity = False
         instance.waseet_score = 0
-        instance.active_subscription = UserSubscription.objects.create(user=instance, subscription=subscription)
+        instance.save()
+        # Create subscription after user is saved with period dates
+        now = timezone.now()
+        user_subscription = UserSubscription.objects.create(
+            user=instance,
+            subscription=subscription,
+            current_period_start=now,
+            current_period_end=now + timedelta(days=30)  # 30 days for monthly
+        )
+        instance.active_subscription = user_subscription
         instance.save()
         return instance
 

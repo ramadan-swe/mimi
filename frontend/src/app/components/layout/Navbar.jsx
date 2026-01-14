@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import { chatAPI } from '../../../lib/api/chat';
 import { Button } from '../ui/button';
 import { Bell, MessageSquare, User, LogOut, Car, Menu, X } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, } from '../ui/dropdown-menu';
@@ -9,6 +10,28 @@ export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Fetch unread count periodically
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUnreadCount();
+      
+      // Poll for unread count every 10 seconds
+      const interval = setInterval(fetchUnreadCount, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const data = await chatAPI.getUnreadCount();
+      setUnreadCount(data.unread_count || 0);
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -32,20 +55,19 @@ export default function Navbar() {
             {/* Messages */}
             <Link to="/chat" className="relative text-gray-700 hover:text-gray-900">
               <MessageSquare className="h-6 w-6" />
-              {/* Unread badge - example */}
-              <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-xs">
-                2
-              </Badge>
+              {/* Unread badge - dynamic count */}
+              {unreadCount > 0 && (
+                <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-xs">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </Badge>
+              )}
             </Link>
 
-            {/* Notifications */}
-            <DropdownMenu>
+            {/* Notifications - Hidden for now, no real notification system yet */}
+            {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="relative text-gray-700 hover:text-gray-900">
                   <Bell className="h-6 w-6" />
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-xs">
-                    3
-                  </Badge>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-80">
@@ -60,17 +82,13 @@ export default function Navbar() {
                       <p className="text-sm">Your request was accepted!</p>
                       <p className="text-xs text-gray-500">5 hours ago</p>
                     </div>
-                    <div className="p-2 hover:bg-gray-50 rounded cursor-pointer">
-                      <p className="text-sm">New message from Ahmed</p>
-                      <p className="text-xs text-gray-500">1 day ago</p>
-                    </div>
                   </div>
                   <Button variant="ghost" className="w-full mt-2" size="sm">
                     View all notifications
                   </Button>
                 </div>
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
 
             {/* User Menu */}
             <DropdownMenu>

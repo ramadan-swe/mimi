@@ -24,7 +24,10 @@ class UserRegistrationView(generics.CreateAPIView):
     permission_classes = (permissions.AllowAny,)
 
     def create(self, request, *args, **kwargs):
+        print(f"Registration request data: {request.data}")  # Debug log
         serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            print(f"Validation errors: {serializer.errors}")  # Debug log
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(

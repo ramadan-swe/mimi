@@ -68,6 +68,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: mimi_celery
+    entrypoint: []
     command: uv run celery -A config worker -l info
     volumes:
       - ./backend:/app

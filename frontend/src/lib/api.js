@@ -178,7 +178,8 @@ export const listingsAPI = {
     },
     // GET /api/listings/search/
     search: async (params) => {
-        return api.get('/api/listings/search/', { params });
+        // Use the main listings endpoint with search parameter
+        return api.get('/api/listings/', { params: { search: params.q, ...params } });
     },
     // POST /api/listings/ai-search/
     aiSearch: async (prompt) => {

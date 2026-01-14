@@ -1,8 +1,8 @@
-# Form Validation with Yup and State Management with Redux
+# Form Validation with Zod and State Management with Redux
 
 ## Overview
 
-This document describes the implementation of Yup for form validation and Redux for state management in the Mimi car rental application.
+This document describes the implementation of Zod for form validation and Redux for state management in the Mimi car rental application.
 
 ## What was Added
 
@@ -10,14 +10,14 @@ This document describes the implementation of Yup for form validation and Redux 
 
 The following npm packages were installed:
 
-- **yup** (^1.7.1): Schema validation library
-- **@hookform/resolvers** (^5.2.2): Integration between react-hook-form and Yup
+- **zod** (^3.24.1): TypeScript-first schema validation library
+- **@hookform/resolvers** (^5.2.2): Integration between react-hook-form and Zod
 - **@reduxjs/toolkit** (^2.11.2): Modern Redux with simplified API
 - **react-redux** (^9.2.0): React bindings for Redux
 
 ### 2. Validation Schemas
 
-Created `/frontend/src/lib/validationSchemas.js` with Yup schemas for:
+Created `/frontend/src/lib/validationSchemas.js` with Zod schemas for:
 
 #### Login Schema
 - **email**: Required, must be valid email format
@@ -67,28 +67,29 @@ Updated `/frontend/src/app/App.jsx`:
 - Store is accessible throughout the component tree
 
 #### Form Pages
-Updated form pages to use Yup validation:
+Updated form pages to use Zod validation:
 
 **LoginPage** (`/frontend/src/app/pages/LoginPage.jsx`):
-- Integrated `yupResolver` with `react-hook-form`
+- Integrated `zodResolver` with `react-hook-form`
 - Uses `loginSchema` for validation
 - Removed inline validation rules
 
 **SignUpPage** (`/frontend/src/app/pages/SignUpPage.jsx`):
-- Integrated `yupResolver` with `react-hook-form`
+- Integrated `zodResolver` with `react-hook-form`
 - Uses `signUpSchema` for validation
 - Removed inline validation rules
 - Enhanced password validation with complexity requirements
 
 ## Benefits
 
-### Form Validation with Yup
-1. **Centralized Validation Logic**: All validation rules are in one place
-2. **Reusable Schemas**: Can be used across different components
-3. **Better Type Safety**: Schema-based validation with TypeScript support
-4. **Consistent Error Messages**: Standardized error messages across forms
-5. **Complex Validation**: Easy to add custom validation rules
-6. **Server-Side Compatibility**: Same schemas can be used on backend if needed
+### Form Validation with Zod
+1. **TypeScript-First**: Built with TypeScript, providing excellent type inference
+2. **Zero Dependencies**: Lightweight with no external dependencies
+3. **Centralized Validation Logic**: All validation rules are in one place
+4. **Reusable Schemas**: Can be used across different components
+5. **Consistent Error Messages**: Standardized error messages across forms
+6. **Complex Validation**: Easy to add custom validation rules with `.refine()` and `.superRefine()`
+7. **Server-Side Compatibility**: Same schemas can be used on backend if needed
 
 ### State Management with Redux
 1. **Predictable State**: Centralized state management
@@ -106,19 +107,21 @@ To add validation for a new form:
 
 ```javascript
 // 1. Define schema in validationSchemas.js
-export const myFormSchema = yup.object().shape({
-  fieldName: yup.string().required('This field is required'),
+import { z } from 'zod';
+
+export const myFormSchema = z.object({
+  fieldName: z.string().min(1, 'This field is required'),
   // ... more fields
 });
 
 // 2. Use in component
 import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { myFormSchema } from '../../lib/validationSchemas';
 
 function MyForm() {
   const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: yupResolver(myFormSchema),
+    resolver: zodResolver(myFormSchema),
   });
 
   // ... rest of component
@@ -208,7 +211,7 @@ Consider adding:
 None. The implementation maintains backward compatibility with existing functionality.
 
 ### Deprecation Warnings
-- The inline validation rules in `react-hook-form` have been replaced with Yup schemas
+- The inline validation rules in `react-hook-form` have been replaced with Zod schemas
 - Local state management in `AuthContext` has been migrated to Redux
 
 ## Future Enhancements
@@ -231,9 +234,10 @@ None. The implementation maintains backward compatibility with existing function
 
 ## Resources
 
-- [Yup Documentation](https://github.com/jquense/yup)
+- [Zod Documentation](https://zod.dev/)
 - [Redux Toolkit Documentation](https://redux-toolkit.js.org/)
-- [React Hook Form + Yup Guide](https://react-hook-form.com/get-started#SchemaValidation)
+- [React Hook Form + Zod Guide](https://react-hook-form.com/get-started#SchemaValidation)
+- [Shadcn Forms with Zod](https://ui.shadcn.com/docs/forms/react-hook-form)
 - [Redux DevTools Extension](https://github.com/reduxjs/redux-devtools)
 
 ## Support

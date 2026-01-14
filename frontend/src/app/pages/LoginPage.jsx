@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '../../lib/validationSchemas';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,7 +12,7 @@ import { Car } from 'lucide-react';
 import { toast } from 'sonner';
 export default function LoginPage() {
   const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: yupResolver(loginSchema),
+    resolver: zodResolver(loginSchema),
   });
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();

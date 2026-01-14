@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { signUpSchema } from '../../lib/validationSchemas';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,7 +12,7 @@ import { Car } from 'lucide-react';
 import { toast } from 'sonner';
 export default function SignUpPage() {
   const { register: registerForm, handleSubmit, formState: { errors } } = useForm({
-    resolver: yupResolver(signUpSchema),
+    resolver: zodResolver(signUpSchema),
   });
   const [isLoading, setIsLoading] = useState(false);
   const { register: registerUser } = useAuth();

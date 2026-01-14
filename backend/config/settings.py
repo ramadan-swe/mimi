@@ -32,7 +32,7 @@ TWILIO_FROM_NUMBER = os.environ.get('TWILIO_FROM_NUMBER')
 PAYMOB_API_KEY = os.environ.get('PAYMOB_API_KEY', '')
 # Support both PAYMOB_INTEGRATION_ID and INTEGRATION_ID for backwards compatibility
 PAYMOB_INTEGRATION_ID = int(os.environ.get('PAYMOB_INTEGRATION_ID', os.environ.get('INTEGRATION_ID', '0')))
-PAYMOB_MOTO_INTEGRATION_ID = int(os.environ.get("PAYMOB_MOTO_INTEGRATION_ID"))
+PAYMOB_MOTO_INTEGRATION_ID = int(os.environ.get("PAYMOB_MOTO_INTEGRATION_ID", '0'))
 # Support both PAYMOB_IFRAME_ID and IFRAME_ID for backwards compatibility
 PAYMOB_IFRAME_ID = int(os.environ.get('PAYMOB_IFRAME_ID', os.environ.get('IFRAME_ID', '0')))
 PAYMOB_SECRET_KEY = os.environ.get('PAYMOB_SECRET_KEY')

@@ -69,11 +69,11 @@ def paymob_unified_webhook(request):
                     # Activate using standard helper
                     activate_user_subscription_standard(obj, plan_id, tx.user)
 
-    # --- HANDLE FORMAT B (Subscription Module - The one you just showed me) ---
+    # --- HANDLE FORMAT B (Subscription Module )
     elif trigger_type == "Subscription Created" or "subscription_data" in data:
         sub_data = data.get('subscription_data', {})
-        gateway_sub_id = str(sub_data.get('id')) # This is the 7742 you saw
-        plan_id = str(sub_data.get('plan_id'))   # This is the 6770 you saw
+        gateway_sub_id = str(sub_data.get('id'))
+        plan_id = str(sub_data.get('plan_id')) 
         email = sub_data.get('client_info', {}).get('email')
 
         try:
@@ -90,7 +90,7 @@ def paymob_unified_webhook(request):
                     'current_period_end': timezone.now() + timedelta(days=30),
                 }
             )
-            print(f"SUCCESS: Captured Sub ID {gateway_sub_id} for {email}")
+            print(f"SUCCESS:  Sub ID {gateway_sub_id} for {email}")
         except Exception as e:
             print(f"WEBHOOK ERROR (Sub Module): {e}")
 

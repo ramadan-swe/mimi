@@ -18,8 +18,8 @@ class PaymobSubscriptionAdapter:
             url = f"{self.base_url}/acceptance/subscription-plans"
             freq = {'WEEKLY': 7, 'MONTHLY': 30, 'YEARLY': 365}.get(period, 30)
             
-            # Replace this with your actual Ngrok URL or production URL
-            # It's better to get this from settings.py
+           
+            
             webhook_url = "https://johnnie-synonymic-carmelo.ngrok-free.dev/api/payments/webhook/paymob/"
 
             payload = {

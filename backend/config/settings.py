@@ -36,6 +36,7 @@ PAYMOB_INTEGRATION_ID = int(os.environ.get('PAYMOB_INTEGRATION_ID', os.environ.g
 PAYMOB_IFRAME_ID = int(os.environ.get('PAYMOB_IFRAME_ID', os.environ.get('IFRAME_ID', '0')))
 PAYMOB_SECRET_KEY = os.environ.get('PAYMOB_SECRET_KEY')
 PAYMOB_PUBLIC_KEY = os.environ.get('PAYMOB_PUBLIC_KEY')
+PAYMOB_HMAC = os.environ.get('PAYMOB_HMAC')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

@@ -14,53 +14,29 @@ const SubscriptionPage = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            // 1. Fetch all available plans from backend
             const plansData = await paymentsAPI.getSubscriptions();
-            const finalPlans = Array.isArray(plansData) ? plansData : (plansData.results || []);
-            setSubscriptions(finalPlans);
-
-            // 2. Fetch the logged-in user's active subscription
+            setSubscriptions(Array.isArray(plansData) ? plansData : (plansData.results || []));
             try {
                 const currentSub = await paymentsAPI.getCurrentSubscription();
                 setActiveSub(currentSub);
             } catch (err) {
-                // 404 is expected if the user has no active plan
-                if (err.response?.status === 404) {
-                    setActiveSub(null);
-                }
+                if (err.response?.status === 404) setActiveSub(null);
             }
         } catch (error) {
-            console.error("Load error:", error);
-            toast.error("Failed to load subscription data.");
+            toast.error("Failed to load pricing.");
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const getDaysRemaining = (dateString) => {
-        if (!dateString) return 0;
-        const endDate = new Date(dateString);
-        const now = new Date();
-        const diffTime = endDate - now;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays > 0 ? diffDays : 0;
-    };
+    useEffect(() => { fetchData(); }, []);
 
     const handleSubscribe = async (planId) => {
         setProcessingId(planId);
         const toastId = toast.loading("Opening Secure Checkout...");
         try {
             const response = await paymentsAPI.createCheckout(planId);
-            // Matches the 'payment_url' we set in SubscriptionService.initialize_subscription
-            if (response.payment_url) {
-                window.location.href = response.payment_url;
-            } else {
-                throw new Error("Invalid response from server");
-            }
+            if (response.payment_url) window.location.href = response.payment_url;
         } catch (error) {
             toast.error(error.response?.data?.error || "Checkout failed", { id: toastId });
             setProcessingId(null);
@@ -68,146 +44,66 @@ const SubscriptionPage = () => {
     };
 
     const handleCancel = async () => {
-        if (!window.confirm("Warning: This will stop your automatic renewal. Access remains until the current period ends. Proceed?")) return;
-        const toastId = toast.loading("Processing cancellation...");
+        if (!window.confirm("Cancel automatic renewal? Access remains until expiry.")) return;
+        const toastId = toast.loading("Processing...");
         try {
             await paymentsAPI.cancelSubscription();
-            toast.success("Cancellation successful", { id: toastId });
-            fetchData(); // Refresh state
+            toast.success("Cancelled successfully", { id: toastId });
+            fetchData();
         } catch (error) {
-            toast.error("Failed to cancel subscription", { id: toastId });
+            toast.error("Cancellation failed", { id: toastId });
         }
     };
 
-    if (loading) return (
-        <div className="flex justify-center items-center min-h-[60vh]">
-            <Loader2 className="animate-spin w-12 h-12 text-blue-600" />
-        </div>
-    );
-
-    // Global state to see if the user is already subbed to something
     const userHasActiveSub = activeSub && activeSub.status === 'ACTIVE';
+
+    if (loading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-blue-600 w-12 h-12" /></div>;
 
     return (
         <div className="container mx-auto px-4 py-12 max-w-7xl font-sans">
-            
-            {/* TOP HEADER SECTION */}
-            <div className="text-center mb-16">
-                <h1 className="text-6xl font-black text-gray-900 mb-4 tracking-tighter italic uppercase">Pricing Plans</h1>
-                <p className="text-gray-500 font-bold italic uppercase tracking-widest">Select the best tier for your business</p>
-                <div className="h-2 w-24 bg-blue-600 mx-auto mt-6 rounded-full"></div>
-            </div>
-
-            {/* ACTIVE SUBSCRIPTION BANNER */}
             {userHasActiveSub ? (
-                <Card className="p-8 bg-gradient-to-r from-blue-700 to-blue-900 border-none mb-16 shadow-2xl text-white rounded-[2.5rem] relative overflow-hidden ring-8 ring-blue-100">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
-                        <div className="flex items-center gap-6">
-                            <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-md">
-                                <CheckCircle size={44} className="text-blue-200" />
-                            </div>
-                            <div>
-                                <p className="text-blue-200 text-xs font-bold uppercase tracking-widest mb-1 italic">Your current plan</p>
-                                <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none">
-                                    {activeSub.plan_name}
-                                </h3>
-                                <div className="flex items-center gap-4 mt-4">
-                                    <span className="text-sm bg-black/20 px-4 py-1.5 rounded-xl flex items-center gap-2 font-medium">
-                                        <Calendar size={14} /> 
-                                        Renews/Ends: {new Date(activeSub.current_period_end).toLocaleDateString()}
-                                    </span>
-                                    <span className="bg-green-400 text-green-950 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-tighter">
-                                        {getDaysRemaining(activeSub.current_period_end)} Days Left
-                                    </span>
-                                </div>
-                            </div>
+                <Card className="p-8 bg-gradient-to-r from-blue-700 to-blue-900 border-none mb-16 text-white rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8 ring-8 ring-blue-50">
+                    <div className="flex items-center gap-6">
+                        <CheckCircle size={44} className="text-blue-200" />
+                        <div>
+                            <p className="text-blue-200 text-xs font-bold uppercase italic">Your current plan</p>
+                            <h3 className="text-4xl font-black italic uppercase tracking-tighter">{activeSub.plan_name}</h3>
+                            <p className="text-sm mt-2 opacity-80">Cycle Ends: {new Date(activeSub.current_period_end).toLocaleDateString()}</p>
                         </div>
-                        <Button 
-                            variant="destructive" 
-                            onClick={handleCancel} 
-                            className="bg-white text-red-600 hover:bg-red-50 font-black px-10 py-7 rounded-2xl shadow-xl border-none uppercase tracking-widest text-sm"
-                        >
-                            <Trash2 className="w-4 h-4 mr-2" /> Cancel Subscription
-                        </Button>
                     </div>
+                    <Button onClick={handleCancel} className="bg-white text-red-600 hover:bg-red-50 font-black px-10 py-7 rounded-2xl uppercase shadow-xl">Cancel Plan</Button>
                 </Card>
             ) : (
-                <div className="bg-amber-50 border-2 border-amber-100 p-6 rounded-[2rem] mb-12 flex items-center gap-4 text-amber-800 shadow-sm font-bold uppercase italic justify-center">
-                    <AlertCircle size={24} />
-                    You are currently on the free tier. No active plan found.
+                <div className="bg-amber-50 border border-amber-100 p-6 rounded-2xl mb-12 text-amber-800 font-bold uppercase italic text-center shadow-sm">
+                    <AlertCircle className="inline mr-2" /> Free Tier Active. Upgrade to list more cars.
                 </div>
             )}
 
-            {/* PRICING GRID */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                 {subscriptions.map((plan) => {
-                    // Logic to see if this card belongs to the user
-                    const isOwnedByMe = activeSub && Number(activeSub.subscription) === Number(plan.id);
-                    
+                    const isOwned = activeSub && Number(activeSub.subscription) === Number(plan.id);
                     return (
-                        <Card 
-                            key={plan.id} 
-                            className={`p-10 flex flex-col border-2 relative transition-all duration-500 rounded-[3rem] ${
-                                isOwnedByMe
-                                ? 'border-blue-600 bg-blue-50/20 ring-8 ring-blue-50 scale-105 z-20 shadow-2xl' 
-                                : userHasActiveSub 
-                                ? 'opacity-60 grayscale-[0.3] bg-gray-50 border-gray-200' 
-                                : 'hover:border-blue-400 hover:shadow-2xl hover:-translate-y-2 bg-white'
-                            }`}
-                        >
-                            <div className="flex justify-between items-start mb-8 font-black uppercase italic text-2xl text-gray-900 tracking-tighter leading-none">
-                                {plan.name}
-                                <Crown className={isOwnedByMe ? 'text-blue-600' : 'text-gray-200'} size={32} />
+                        <Card key={plan.id} className={`p-10 flex flex-col border-2 rounded-[3.5rem] transition-all duration-500 ${isOwned ? 'border-blue-600 ring-8 ring-blue-50 scale-105 z-10' : userHasActiveSub ? 'opacity-50 grayscale bg-gray-50' : 'hover:shadow-2xl hover:-translate-y-2 bg-white'}`}>
+                            <div className="flex justify-between items-start mb-6 font-black uppercase italic text-2xl tracking-tighter">
+                                {plan.name} <Crown className={isOwned ? 'text-blue-600' : 'text-gray-200'} size={32} />
                             </div>
-
                             <div className="mb-8 flex items-baseline">
-                                <span className="text-6xl font-black text-gray-900 tracking-tighter leading-none">{Math.floor(plan.price)}</span>
-                                <div className="ml-3">
-                                    <p className="text-gray-400 font-bold text-xs uppercase italic leading-none">EGP</p>
-                                    <p className="text-gray-400 font-bold text-xs uppercase italic leading-none">
-                                        / {plan.period === 'YEARLY' ? 'Yr' : 'Mo'}
-                                    </p>
-                                </div>
+                                <span className="text-6xl font-black">{Math.floor(plan.price)}</span>
+                                <span className="text-gray-400 font-bold ml-2">EGP / Mo</span>
                             </div>
-
-                            {/* FEATURES LIST */}
                             <ul className="space-y-4 mb-12 flex-grow">
-                                <li className="flex items-center gap-3 text-gray-800 font-bold italic uppercase text-sm">
-                                    <CheckCircle className="text-blue-600" size={18} />
-                                    {plan.max_listings >= 9999 ? "Unlimited" : `Up to ${plan.max_listings}`} Listings
+                                <li className="flex items-center gap-3 text-gray-800 font-bold uppercase text-xs">
+                                    <CheckCircle size={18} className="text-blue-600" /> {plan.max_listings >= 9999 ? "Unlimited" : plan.max_listings} Listings
                                 </li>
-                                
-                                {/* Mapping through the JSON features field from Django */}
-                                {plan.features && typeof plan.features === 'object' && (
-                                    Object.entries(plan.features).map(([key, value]) => (
-                                        <li key={key} className="flex items-center gap-3 text-gray-600 font-medium italic text-sm">
-                                            <Check className="text-blue-400" size={18} />
-                                            <span>{typeof value === 'boolean' ? key : value}</span>
-                                        </li>
-                                    ))
-                                )}
+                                {plan.features && Object.entries(plan.features).map(([k, v]) => (
+                                    <li key={k} className="flex items-center gap-3 text-gray-600 text-sm font-medium italic">
+                                        <Check size={18} className="text-blue-400" /> {typeof v === 'boolean' ? k : v}
+                                    </li>
+                                ))}
                             </ul>
-
-                            {/* DYNAMIC BUTTON */}
-                            <Button 
-                                className={`w-full py-8 text-xl font-black uppercase rounded-2xl shadow-xl transition-all tracking-widest ${
-                                    isOwnedByMe
-                                    ? 'bg-blue-100 text-blue-600 border-2 border-blue-600 cursor-default shadow-none' 
-                                    : userHasActiveSub 
-                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-                                    : 'bg-blue-600 hover:bg-black text-white'
-                                }`}
-                                disabled={userHasActiveSub || processingId === plan.id}
-                                onClick={() => handleSubscribe(plan.id)}
-                            >
-                                {processingId === plan.id ? (
-                                    <Loader2 className="animate-spin" />
-                                ) : (
-                                    isOwnedByMe ? "Current Plan" : userHasActiveSub ?  "Select Plan" : ""
-                                )}
+                            <Button disabled={userHasActiveSub || processingId === plan.id} onClick={() => handleSubscribe(plan.id)} className={`w-full py-8 text-xl font-black uppercase rounded-2xl shadow-lg ${isOwned ? 'bg-blue-100 text-blue-600 border-none cursor-default' : 'bg-blue-600 text-white hover:bg-black'}`}>
+                                {processingId === plan.id ? <Loader2 className="animate-spin" /> : isOwned ? "Active" : userHasActiveSub ? "Locked" : "Select Plan"}
                             </Button>
-
-                         
                         </Card>
                     );
                 })}

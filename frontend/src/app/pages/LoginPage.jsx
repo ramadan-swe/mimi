@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema } from '../../lib/validationSchemas';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../components/ui/button';
@@ -9,7 +11,9 @@ import { Card } from '../components/ui/card';
 import { Car } from 'lucide-react';
 import { toast } from 'sonner';
 export default function LoginPage() {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(loginSchema),
+  });
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -21,7 +25,7 @@ export default function LoginPage() {
       toast.success('Welcome back!');
       navigate('/');
     }
-    catch (error) {
+    catch {
       toast.error('Invalid email or password');
     }
     finally {
@@ -52,13 +56,7 @@ export default function LoginPage() {
             id="email"
             type="email"
             placeholder="your.email@example.com"
-            {...register("email", {
-              required: "Email is required",
-              pattern: {
-                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: "Invalid email address"
-              }
-            })}
+            {...register("email")}
           />
           {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
         </div>
@@ -74,7 +72,7 @@ export default function LoginPage() {
             id="password"
             type="password"
             placeholder="••••••••"
-            {...register("password", { required: "Password is required" })}
+            {...register("password")}
           />
           {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
         </div>

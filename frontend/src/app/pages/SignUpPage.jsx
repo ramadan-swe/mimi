@@ -10,15 +10,19 @@ import { Label } from "../components/ui/label";
 import { Card } from "../components/ui/card";
 import { Car } from "lucide-react";
 import { toast } from "sonner";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 export default function SignUpPage() {
   const {
     register: registerForm,
     handleSubmit,
     formState: { errors },
+    setValue,
   } = useForm({
     resolver: zodResolver(signUpSchema),
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
 
@@ -86,11 +90,29 @@ export default function SignUpPage() {
 
           <div className="space-y-2">
             <Label htmlFor="phone_number">Phone Number</Label>
-            <Input
-              id="phone_number"
-              type="tel"
-              placeholder="+20XXXXXXXXXX"
-              {...registerForm("phone_number")}
+            <PhoneInput
+              country={'eg'}
+              value={phoneNumber}
+              onChange={(phone) => {
+                setPhoneNumber(phone);
+                setValue('phone_number', '+' + phone);
+              }}
+              inputStyle={{
+                width: '100%',
+                height: '40px',
+                fontSize: '14px',
+                paddingLeft: '48px',
+                borderRadius: '6px',
+                border: '1px solid #e5e7eb',
+              }}
+              buttonStyle={{
+                borderRadius: '6px 0 0 6px',
+                border: '1px solid #e5e7eb',
+                backgroundColor: 'white',
+              }}
+              containerStyle={{
+                width: '100%',
+              }}
             />
             {errors.phone_number && (
               <p className="text-sm text-red-500">

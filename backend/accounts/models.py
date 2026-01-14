@@ -25,8 +25,17 @@ class User(AbstractUser):
     is_deleted = models.BooleanField(default=False, db_index=True) # For soft delete (never hard delete users)
     
     def can_create_listing(self):
-        return self.active_listings_count < self.active_subscription.subscription.max_listings
+        """Check if user can create more listings based on their subscription"""
+        try:
+            subscription = self.active_subscription
+            if subscription and subscription.subscription:
+                return self.active_listings_count < subscription.subscription.max_listings
+        except Exception:
+            pass
+        # If no subscription, allow up to 1 listing (free tier default)
+        return self.active_listings_count < 1
     
     @property
     def active_listings_count(self):
+        from listings.models import ListingStatus
         return self.listings.filter(status=ListingStatus.ACTIVE).count()

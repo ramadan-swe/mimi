@@ -1,13 +1,15 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { listingsAPI, reviewsAPI } from '../../lib/api';
+import { chatAPI } from '../../lib/api/chat';
 import { getWaseetScoreBadgeStyle } from '../../lib/mockData';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { MapPin, Shield, Star, Crown, Calendar, Loader2 } from 'lucide-react';
+import { MapPin, Shield, Star, Crown, Calendar, Loader2, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import RentalDatePicker from '../components/listings/RentalDatePicker';
+import { toast } from 'react-hot-toast';
 
 export default function ListingDetailPage() {
     const { id } = useParams();
@@ -17,6 +19,7 @@ export default function ListingDetailPage() {
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [contactingOwner, setContactingOwner] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -69,6 +72,30 @@ export default function ListingDetailPage() {
     const mainImage = listing.images?.find(img => img.image_type === 'MAIN')?.image 
         || listing.images?.[0]?.image 
         || '/placeholder-car.jpg';
+
+    const handleContactOwner = async () => {
+        if (!isAuthenticated) {
+            toast.error('Please log in to contact the owner');
+            navigate('/login');
+            return;
+        }
+
+        if (listing.owner?.id === user?.id) {
+            toast.error('You cannot message yourself');
+            return;
+        }
+
+        setContactingOwner(true);
+        try {
+            const chatRoom = await chatAPI.createOrGetChatRoom(listing.id);
+            navigate(`/chat/${chatRoom.id}`);
+        } catch (error) {
+            console.error('Error starting chat:', error);
+            toast.error('Failed to start conversation. Please try again.');
+        } finally {
+            setContactingOwner(false);
+        }
+    };
 
     return (<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -196,6 +223,17 @@ export default function ListingDetailPage() {
                 <Button className="w-full mb-4" size="lg" disabled>
                   <Calendar className="h-5 w-5 mr-2"/>
                   Request Rental
+                </Button>
+
+                <Button 
+                  className="w-full mb-4" 
+                  size="lg"
+                  variant="outline"
+                  onClick={handleContactOwner}
+                  disabled={contactingOwner || !isAuthenticated || listing.owner?.id === user?.id}
+                >
+                  <MessageCircle className="h-5 w-5 mr-2"/>
+                  {contactingOwner ? 'Starting...' : 'Contact Owner'}
                 </Button>
 
                 {!isAuthenticated && (

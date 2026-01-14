@@ -1,25 +1,22 @@
 // frontend/src/app/pages/ChatPage.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import { useParams } from 'react-router-dom';
 import ChatRoomList from '../components/chat/ChatRoomList';
 import ChatWindow from '../components/chat/ChatWindow';
 import ChatInput from '../components/chat/ChatInput';
 import { useAuth } from '../../contexts/AuthContext';
+import { chatAPI } from '../../lib/api/chat';
+import { toast } from 'react-hot-toast';
 
 const ChatPage = () => {
   const { user } = useAuth();
+  const { roomId } = useParams();
   const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
-
-  const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-    }
-  });
+  const pollingInterval = useRef(null);
 
   useEffect(() => {
     if (user) {
@@ -28,22 +25,52 @@ const ChatPage = () => {
   }, [user]);
 
   useEffect(() => {
+    if (roomId && rooms.length > 0) {
+      // If we have a roomId in the URL, select that room
+      const room = rooms.find(r => r.id === parseInt(roomId));
+      if (room) {
+        setSelectedRoom(room);
+      }
+    }
+  }, [roomId, rooms]);
+
+  useEffect(() => {
     if (selectedRoom) {
       loadMessages(selectedRoom.id);
+      markAsRead(selectedRoom.id);
+      
+      // Set up polling for new messages every 3 seconds
+      pollingInterval.current = setInterval(() => {
+        loadMessages(selectedRoom.id);
+      }, 3000);
+      
+      return () => {
+        if (pollingInterval.current) {
+          clearInterval(pollingInterval.current);
+        }
+      };
     }
   }, [selectedRoom]);
 
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   const loadChatRooms = async () => {
     try {
-      const response = await api.get('/api/chat/rooms/');
-      setRooms(response.data.results);
-      if (response.data.count > 0 && !selectedRoom) {
-        setSelectedRoom(response.data.results[0]);
+      const data = await chatAPI.getChatRooms();
+      setRooms(data.results || data || []);
+      
+      if ((data.results || data).length > 0 && !selectedRoom && !roomId) {
+        setSelectedRoom((data.results || data)[0]);
       }
     } catch (error) {
       console.error('Error loading chat rooms:', error);
-      // Fallback to mock data
-      setRooms(getMockRooms());
+      toast.error('Failed to load conversations');
     } finally {
       setLoading(false);
     }
@@ -51,10 +78,18 @@ const ChatPage = () => {
 
   const loadMessages = async (roomId) => {
     try {
-      const response = await api.get(`/api/chat/rooms/${roomId}/messages/`);
-      setMessages(response.data);
+      const data = await chatAPI.getMessages(roomId);
+      setMessages(data);
     } catch (error) {
       console.error('Error loading messages:', error);
+    }
+  };
+
+  const markAsRead = async (roomId) => {
+    try {
+      await chatAPI.markAsRead(roomId);
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
     }
   };
 
@@ -62,40 +97,37 @@ const ChatPage = () => {
     if (!selectedRoom || !content.trim() || !user) return;
 
     try {
-      const response = await api.post('/api/chat/messages/', {
-        chat_room: selectedRoom.id,
-        content: content
+      const newMessage = await chatAPI.sendMessage(selectedRoom.id, content);
+      setMessages(prev => [...prev, newMessage]);
+
+      // Update room's last message and move to top
+      setRooms(prev => {
+        const updatedRooms = prev.map(room => {
+          if (room.id === selectedRoom.id) {
+            return {
+              ...room,
+              updated_at: new Date().toISOString(),
+              last_message: {
+                content: content,
+                created_at: newMessage.created_at,
+                sender_id: user.id
+              }
+            };
+          }
+          return room;
+        });
+        
+        // Sort to move updated room to top
+        return updatedRooms.sort((a, b) => 
+          new Date(b.updated_at) - new Date(a.updated_at)
+        );
       });
 
-      setMessages(prev => [...prev, response.data]);
-
-      // Update room's last message
-      setRooms(prev => prev.map(room => {
-        if (room.id === selectedRoom.id) {
-          return {
-            ...room,
-            updated_at: new Date().toISOString(),
-            last_message: content
-          };
-        }
-        return room;
-      }));
+      scrollToBottom();
     } catch (error) {
       console.error('Error sending message:', error);
+      toast.error('Failed to send message');
     }
-  };
-
-  // Mock data fallback
-  const getMockRooms = () => {
-    return [
-      {
-        id: 1,
-        renter: { id: 1, username: 'Ahmed Mohamed' },
-        owner: { id: 2, username: 'محمد صاحب العقار' },
-        listing: { id: 1, title: 'شقة في التجمع الخامس' },
-        updated_at: new Date().toISOString()
-      }
-    ];
   };
 
   if (loading) {
@@ -103,7 +135,7 @@ const ChatPage = () => {
       <div className="flex h-screen bg-gray-50 items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">جاري تحميل المحادثات...</p>
+          <p className="mt-4 text-gray-600">Loading conversations...</p>
         </div>
       </div>
     );
@@ -131,6 +163,7 @@ const ChatPage = () => {
                   ? selectedRoom.owner
                   : selectedRoom.renter
               }
+              listing={selectedRoom.listing}
               messagesEndRef={messagesEndRef}
             />
 

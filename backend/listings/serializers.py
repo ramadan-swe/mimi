@@ -67,7 +67,8 @@ class ListingCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         vehicle_data = validated_data.pop('vehicle_data')
-        owner = self.context['request'].user
+        # owner is passed via save(owner=...) from the view
+        owner = validated_data.pop('owner')
         
         # Create vehicle
         vehicle = Vehicle.objects.create(owner=owner, **vehicle_data)
@@ -121,6 +122,10 @@ class RentalRequestCreateSerializer(serializers.ModelSerializer):
         start_date = data['start_date']
         end_date = data['end_date']
         renter = self.context['request'].user
+        
+        # Prevent owner from renting their own car
+        if listing.owner == renter:
+            raise serializers.ValidationError("You cannot rent your own car")
         
         # Validate dates (allow same day for 1-day rental)
         if start_date > end_date:

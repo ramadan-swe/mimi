@@ -178,7 +178,8 @@ export const listingsAPI = {
     },
     // GET /api/listings/search/
     search: async (params) => {
-        return api.get('/api/listings/search/', { params });
+        // Use the main listings endpoint with search parameter
+        return api.get('/api/listings/', { params: { search: params.q, ...params } });
     },
     // POST /api/listings/ai-search/
     aiSearch: async (prompt) => {
@@ -203,6 +204,16 @@ export const listingsAPI = {
     // GET /api/listings/{id}/availability/unavailable-dates/
     getUnavailableDates: async (listingId) => {
         return api.get(`/api/listings/${listingId}/availability/unavailable-dates/`);
+    },
+    // POST /api/listings/{id}/upload_image/
+    uploadImage: async (listingId, formData) => {
+        // Remove Content-Type header and transformRequest to let browser handle FormData properly
+        return api.post(`/api/listings/${listingId}/upload_image/`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            transformRequest: [(data) => data], // Don't transform FormData
+        });
     },
 };
 

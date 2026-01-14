@@ -40,6 +40,7 @@ services:
     command: uv run python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend:/app
+      - ./backend/static/test-images:/host-static/test-images:ro
       - static_files:/app/static
       - media_files:/app/media
     ports:
@@ -68,6 +69,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: mimi_celery
+    entrypoint: []
     command: uv run celery -A config worker -l info
     volumes:
       - ./backend:/app

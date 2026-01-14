@@ -8,8 +8,15 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
+# Copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Expose Vite dev server port
 EXPOSE 3000
+
+# Use entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Start dev server with hot reload
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

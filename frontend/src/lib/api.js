@@ -205,6 +205,16 @@ export const listingsAPI = {
     getUnavailableDates: async (listingId) => {
         return api.get(`/api/listings/${listingId}/availability/unavailable-dates/`);
     },
+    // POST /api/listings/{id}/upload_image/
+    uploadImage: async (listingId, formData) => {
+        // Remove Content-Type header and transformRequest to let browser handle FormData properly
+        return api.post(`/api/listings/${listingId}/upload_image/`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            transformRequest: [(data) => data], // Don't transform FormData
+        });
+    },
 };
 
 // RENTALS ENDPOINTS

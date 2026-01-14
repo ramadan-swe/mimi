@@ -3,7 +3,7 @@ set -e
 
 # Run migrations if needed
 if [ -f "manage.py" ]; then
-    # create vector extension FIRST (before migrations)
+    # Create vector extension BEFORE migrations
     echo "⏳ Creating vector extension..."
     uv run python manage.py shell <<EOF
 from django.db import connection
@@ -12,21 +12,28 @@ with connection.cursor() as cursor:
 EOF
 
     echo "⏳ Running migrations..."
-    uv run python manage.py migrate --noinput
+    uv run python manage.py makemigrations || true
+    uv run python manage.py migrate --noinput || true
 
     # Collect static files
     echo "📦 Collecting static files..."
     python manage.py collectstatic --noinput || true
 
-    # Only seed if database is empty (check if User table has any records)
-    echo "🔍 Checking if database needs seeding..."
-    USER_COUNT=$(uv run python manage.py shell -c "from accounts.models import User; print(User.objects.count())" 2>/dev/null || echo "0")
+    # Copy test images if they don't exist in container
+    if [ ! -d "/app/static/test-images" ] && [ -d "/host-static/test-images" ]; then
+        echo "📸 Copying test images..."
+        cp -r /host-static/test-images /app/static/ || true
+    fi
+
+    # Check if database needs seeding
+    echo "🌱 Checking if database needs seeding..."
+    LISTING_COUNT=$(uv run python manage.py shell -c "from listings.models import Listing; print(Listing.objects.count())" 2>/dev/null || echo "0")
     
-    if [ "$USER_COUNT" = "0" ]; then
-        echo "📊 Seeding database with initial data..."
-        uv run python manage.py seed_data --clear --users 20 --listings 50
+    if [ "$LISTING_COUNT" = "0" ]; then
+        echo "🌱 Seeding database..."
+        uv run python manage.py seed_data --clear --users 20 --listings 50 || true
     else
-        echo "✅ Database already has data (${USER_COUNT} users). Skipping seeding."
+        echo "✅ Database already has data ($LISTING_COUNT listings). Skipping seeding."
     fi
 fi
 

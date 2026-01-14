@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { store } from '../store';
 import { AuthProvider, useAuth } from '../contexts/AuthContext'; // Up to src, then contexts
 import { Toaster } from './components/ui/sonner'; // Inside app folder
 import { Toaster as HotToaster } from 'react-hot-toast';
@@ -61,10 +63,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+    <Provider store={store}>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </Provider>
   );
 }

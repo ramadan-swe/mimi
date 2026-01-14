@@ -52,6 +52,8 @@ class ListingViewSet(viewsets.ModelViewSet):
             return ListingCreateSerializer
         elif self.action in ['update', 'partial_update']:
             return ListingUpdateSerializer
+        elif self.action == 'upload_image':
+            return ListingImageCreateSerializer
         return ListingSerializer
 
     def get_permissions(self):

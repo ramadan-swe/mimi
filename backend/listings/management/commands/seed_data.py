@@ -103,6 +103,12 @@ class Command(BaseCommand):
                 users.append(User.objects.get(email=email))
                 continue
             
+            # Ensure some elite hosts (30% chance of 90-100, rest 60-89)
+            if random.random() < 0.3:
+                waseet_score = random.randint(90, 100)
+            else:
+                waseet_score = random.randint(60, 89)
+            
             user = User.objects.create_user(
                 username=email,
                 email=email,
@@ -113,7 +119,7 @@ class Command(BaseCommand):
                 role=random.choice(['OWNER', 'RENTER', 'OWNER']),  # More owners
                 is_verified_identity=True,
                 is_phone_verified=True,
-                waseet_score=random.randint(60, 100),
+                waseet_score=waseet_score,
             )
             
             # Assign subscription
@@ -245,19 +251,8 @@ class Command(BaseCommand):
     def _add_listing_images(self, listing):
         """Copy test images and create ListingImage entries for a listing"""
         import os
-        import shutil
         from django.conf import settings
         from django.core.files import File
-        
-        # Map test image filenames to ImageType choices
-        image_mapping = {
-            'main.png': ('MAIN', 0),
-            'back.png': ('BACK', 1),
-            'back-left.png': ('LEFT', 2),
-            'back-right.png': ('RIGHT', 3),
-            'right-side.png': ('FRONT', 4),
-            'inner-car.png': ('INTERIOR', 5),
-        }
         
         source_dir = os.path.join(settings.BASE_DIR, 'static', 'test-images')
         
@@ -265,7 +260,24 @@ class Command(BaseCommand):
         if not os.path.exists(source_dir):
             return
         
-        for filename, (image_type, order) in image_mapping.items():
+        # Get all image files from directory
+        all_images = [f for f in os.listdir(source_dir) 
+                     if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        
+        if not all_images:
+            return
+        
+        # Shuffle to get random distribution
+        random.shuffle(all_images)
+        
+        # Use up to 6 random images for this listing
+        num_images = min(len(all_images), random.randint(3, 6))
+        selected_images = all_images[:num_images]
+        
+        # Image type order
+        image_types = ['MAIN', 'FRONT', 'BACK', 'LEFT', 'RIGHT', 'INTERIOR']
+        
+        for idx, filename in enumerate(selected_images):
             source_path = os.path.join(source_dir, filename)
             
             if os.path.exists(source_path):
@@ -273,8 +285,8 @@ class Command(BaseCommand):
                 with open(source_path, 'rb') as f:
                     listing_image = ListingImage(
                         listing=listing,
-                        image_type=image_type,
-                        order=order
+                        image_type=image_types[idx % len(image_types)],
+                        order=idx
                     )
                     # Save the file with Django's file handling
                     listing_image.image.save(filename, File(f), save=True)

@@ -326,6 +326,15 @@ class RentalRequestViewSet(viewsets.ModelViewSet):
         
         return Response(RentalRequestSerializer(rental_request).data)
     
+    @action(detail=False, methods=['get'])
+    def pending_count(self, request):
+        """Get count of pending rental requests for listings owned by the current user"""
+        count = RentalRequest.objects.filter(
+            listing__owner=request.user,
+            status='PENDING'
+        ).count()
+        return Response({'pending_count': count})
+    
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
         """Reject a rental request (owner only)"""

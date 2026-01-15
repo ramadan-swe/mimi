@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { chatAPI } from '../../../lib/api/chat';
+import { rentalsAPI } from '../../../lib/api';
 import { Button } from '../ui/button';
 import { Bell, MessageSquare, User, LogOut, Car, Menu, X } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, } from '../ui/dropdown-menu';
@@ -11,14 +12,19 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
   // Fetch unread count periodically
   useEffect(() => {
     if (isAuthenticated) {
       fetchUnreadCount();
+      fetchPendingRequestsCount();
       
-      // Poll for unread count every 10 seconds
-      const interval = setInterval(fetchUnreadCount, 10000);
+      // Poll for counts every 10 seconds
+      const interval = setInterval(() => {
+        fetchUnreadCount();
+        fetchPendingRequestsCount();
+      }, 10000);
       return () => clearInterval(interval);
     }
   }, [isAuthenticated]);
@@ -29,6 +35,15 @@ export default function Navbar() {
       setUnreadCount(data.unread_count || 0);
     } catch (error) {
       console.error('Error fetching unread count:', error);
+    }
+  };
+
+  const fetchPendingRequestsCount = async () => {
+    try {
+      const data = await rentalsAPI.getPendingCount();
+      setPendingRequestsCount(data.pending_count || 0);
+    } catch (error) {
+      console.error('Error fetching pending requests count:', error);
     }
   };
 
@@ -63,7 +78,17 @@ export default function Navbar() {
               )}
             </Link>
 
-            {/* Notifications - Hidden for now, no real notification system yet */}
+            {/* Rental Requests Notifications */}
+            <Link to="/dashboard?tab=requests" className="relative text-gray-700 hover:text-gray-900">
+              <Bell className="h-6 w-6" />
+              {pendingRequestsCount > 0 && (
+                <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-orange-500 text-xs">
+                  {pendingRequestsCount > 99 ? '99+' : pendingRequestsCount}
+                </Badge>
+              )}
+            </Link>
+
+            {/* Old Notifications dropdown - removed */}
             {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="relative text-gray-700 hover:text-gray-900">

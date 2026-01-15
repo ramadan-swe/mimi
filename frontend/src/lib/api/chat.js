@@ -30,6 +30,16 @@ export const chatAPI = {
     return response.data;
   },
 
+  // Get or create a chat room for owner to chat with a renter
+  createOrGetChatRoomForRenter: async (listingId, renterId) => {
+    const response = await axios.post(
+      `${API_URL}/api/chat/rooms/create_or_get_for_renter/`,
+      { listing_id: listingId, renter_id: renterId },
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  },
+
   // Get messages for a specific chat room
   getMessages: async (roomId) => {
     const response = await axios.get(`${API_URL}/api/chat/rooms/${roomId}/messages/`, {

@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Plus, Calendar as CalendarIcon, MessageSquare, Loader2, Car, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { listingsAPI, rentalsAPI } from '../../lib/api';
+import { chatAPI } from '../../lib/api/chat';
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
@@ -247,6 +248,8 @@ function CalendarTab({ listings, requests }) {
 
 export default function OwnerDashboard() {
     const { user } = useAuth();
+    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const userId = user?.id || user?.user_id;
     const [listings, setListings] = useState([]);
     const [requests, setRequests] = useState([]);
@@ -346,6 +349,19 @@ export default function OwnerDashboard() {
         }
     };
 
+    const handleChatWithRenter = async (request) => {
+        try {
+            const listingId = request.listing_details?.id || request.listing?.id || request.listing;
+            const renterId = request.renter_details?.id || request.renter?.id || request.renter;
+            
+            const chatRoom = await chatAPI.createOrGetChatRoomForRenter(listingId, renterId);
+            navigate(`/chat/${chatRoom.id}`);
+        } catch (err) {
+            console.error('Error opening chat:', err);
+            toast.error('Failed to open chat');
+        }
+    };
+
     const pendingCount = requests.filter(r => r.status === 'PENDING').length;
 
     return (<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -359,7 +375,7 @@ export default function OwnerDashboard() {
         </Link>
       </div>
 
-      <Tabs defaultValue="listings" className="space-y-6">
+      <Tabs value={searchParams.get('tab') || 'listings'} onValueChange={(value) => setSearchParams({ tab: value })} className="space-y-6">
         <TabsList>
           <TabsTrigger value="listings">My Listings</TabsTrigger>
           <TabsTrigger value="requests">
@@ -485,12 +501,12 @@ export default function OwnerDashboard() {
                             Reject
                           </Button>
                         </div>)}
-                      {request.status === 'ACCEPTED' && (<Link to={`/chat/${request.id}`}>
-                          <Button>
+                      {request.status === 'ACCEPTED' && (
+                          <Button onClick={() => handleChatWithRenter(request)}>
                             <MessageSquare className="h-4 w-4 mr-2"/>
                             Chat with Renter
                           </Button>
-                        </Link>)}
+                        )}
                     </div>
                   </div>
                 </Card>

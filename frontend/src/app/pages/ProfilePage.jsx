@@ -4,13 +4,15 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { Shield, Phone, CheckCircle, Crown, Loader2 } from 'lucide-react';
+import { Input } from '../components/ui/input';
+import { Shield, Phone, CheckCircle, Crown, Loader2, Pencil } from 'lucide-react';
 import { getWaseetScoreBadgeStyle } from '../../lib/mockData';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { decodeJWT } from '../../lib/jwt';
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const navigate = useNavigate();
   if (!user) return null;
 
@@ -19,6 +21,7 @@ export default function ProfilePage() {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState(null);
 
   const handlePhoneVerification = async () => {
     if (!profile?.phone_number) {
@@ -46,16 +49,24 @@ export default function ProfilePage() {
       const response = await api.auth.confirmOTP(profile.phone_number, otpCode);
       toast.success('Phone verified successfully!');
       
-      // Update tokens with new ones that have is_verified_identity = true
+      // Update tokens with new ones that have is_phone_verified = true
       if (response.access && response.refresh) {
         localStorage.setItem('access_token', response.access);
         localStorage.setItem('refresh_token', response.refresh);
         
-        // Navigate to home and back to force re-render with new token
+        // Decode the new token and update the user state
+        const updatedUserData = decodeJWT(response.access);
+        if (updatedUserData) {
+          updateUser(updatedUserData);
+        }
+        
+        // Close modal and reset OTP
         setShowOtpModal(false);
         setOtpCode('');
-        navigate('/');
-        setTimeout(() => navigate('/profile'), 100);
+        
+        // Refresh the profile data
+        const updatedProfile = await api.auth.getProfile();
+        setProfile(updatedProfile);
       }
     } catch (error) {
       toast.error('Invalid OTP code. Please try again.');
@@ -65,9 +76,7 @@ export default function ProfilePage() {
   };
 
   const handleIdentityVerification = () => {
-    toast.info('Identity verification will be implemented soon');
-    // Navigate to identity verification flow
-    // navigate('/verify-identity');
+    navigate('/verify-identity');
   };
 
   useEffect(() => {
@@ -75,7 +84,14 @@ export default function ProfilePage() {
       try {
         const profile = await api.auth.getProfile();
         setProfile(profile);
-        // console.log(profile);
+        
+        // Also fetch verification status
+        try {
+          const verStatus = await api.auth.getVerificationStatus();
+          setVerificationStatus(verStatus);
+        } catch (e) {
+          // Ignore if no verification exists
+        }
       } catch (error) {
           console.error('Failed to fetch profile:', error);
       } finally {
@@ -107,29 +123,30 @@ export default function ProfilePage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-600">First Name</p>
-              <p className="font-semibold">{user.first_name}</p>
+              <p className="font-semibold">{profile?.first_name || user.first_name}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Last Name</p>
-              <p className="font-semibold">{user.last_name}</p>
+              <p className="font-semibold">{profile?.last_name || user.last_name}</p>
             </div>
           </div>
           <div>
             <p className="text-sm text-gray-600">Email</p>
-            <p className="font-semibold">{user.email}</p>
+            <p className="font-semibold">{profile?.email || user.email}</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Phone Number</p>
             <div className="flex items-center gap-2">
-              <p className="font-semibold">{profile.phone_number || 'Not provided'}</p>
-              {user.is_phone_verified && (<Badge className="bg-green-500">
+              <p className="font-semibold">{profile?.phone_number || 'Not provided'}</p>
+              {profile?.is_phone_verified && (<Badge className="bg-green-500">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 Verified
               </Badge>)}
             </div>
           </div>
         </div>
-        <Button variant="outline" className="mt-4">
+        <Button variant="outline" className="mt-4" onClick={() => navigate('/profile/edit')}>
+          <Pencil className="h-4 w-4 mr-2" />
           Edit Profile
         </Button>
       </Card>
@@ -146,7 +163,7 @@ export default function ProfilePage() {
                 <p className="text-sm text-gray-600">SMS OTP verification</p>
               </div>
             </div>
-            {user.is_phone_verified ? (<Badge className="bg-green-500">Verified</Badge>) : (<Button size="sm" onClick={handlePhoneVerification}>Verify Now</Button>)}
+            {(profile?.is_phone_verified ?? user.is_phone_verified) ? (<Badge className="bg-green-500">Verified</Badge>) : (<Button size="sm" onClick={handlePhoneVerification}>Verify Now</Button>)}
           </div>
 
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -157,7 +174,13 @@ export default function ProfilePage() {
                 <p className="text-sm text-gray-600">National ID & Driver's License</p>
               </div>
             </div>
-            {user.is_verified_identity ? (<Badge className="bg-green-500">Verified</Badge>) : (<Button size="sm" onClick={handleIdentityVerification}>Verify Now</Button>)}
+            {(profile?.is_verified_identity ?? user.is_verified_identity) ? (
+              <Badge className="bg-green-500">Verified</Badge>
+            ) : verificationStatus?.has_submitted ? (
+              <Badge className="bg-orange-500">Pending Review</Badge>
+            ) : (
+              <Button size="sm" onClick={handleIdentityVerification}>Verify Now</Button>
+            )}
           </div>
         </div>
       </Card>
@@ -214,13 +237,13 @@ export default function ProfilePage() {
           <p className="text-gray-600 mb-4">
             We sent a 6-digit code to {profile?.phone_number}
           </p>
-          <input
+          <Input
             type="text"
             maxLength="6"
             placeholder="000000"
             value={otpCode}
             onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-            className="w-full px-4 py-3 text-center text-2xl tracking-widest border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="text-center text-2xl tracking-widest mb-4"
             autoFocus
           />
           <div className="flex gap-2">
@@ -253,5 +276,6 @@ export default function ProfilePage() {
         </Card>
       </div>
     )}
+
   </div>);
 }

@@ -184,7 +184,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('phone_number', )
+        fields = ('id', 'email', 'first_name', 'last_name', 'phone_number', 'is_phone_verified', 'is_verified_identity', 'waseet_score')
+        read_only_fields = ('id', 'is_phone_verified', 'is_verified_identity', 'waseet_score')
+
+    def update(self, instance, validated_data):
+        # If phone number is being changed, reset verification status
+        new_phone = validated_data.get('phone_number')
+        if new_phone and new_phone != instance.phone_number:
+            instance.is_phone_verified = False
+        return super().update(instance, validated_data)
 
 
 class PhoneVerificationSerializer(serializers.Serializer):
@@ -251,4 +259,42 @@ class PublicUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'first_name', 'last_name', 'waseet_score', 'date_joined']
+        read_only_fields = fields
+
+
+class IDVerificationSerializer(serializers.ModelSerializer):
+    """Serializer for ID verification submission"""
+    from .models import IDVerification
+    
+    class Meta:
+        from .models import IDVerification
+        model = IDVerification
+        fields = ['id', 'national_id_image_front', 'national_id_image_back', 'driver_license_image', 
+                  'is_verified', 'verification_date', 'verification_notes']
+        read_only_fields = ['id', 'is_verified', 'verification_date', 'verification_notes']
+    
+    def create(self, validated_data):
+        from .models import IDVerification
+        user = self.context['request'].user
+        # Check if user already has a verification request
+        existing = IDVerification.objects.filter(user=user).first()
+        if existing:
+            # Update existing verification
+            for key, value in validated_data.items():
+                setattr(existing, key, value)
+            existing.is_verified = False  # Reset verification status
+            existing.save()
+            return existing
+        # Create new verification
+        return IDVerification.objects.create(user=user, **validated_data)
+
+
+class IDVerificationStatusSerializer(serializers.ModelSerializer):
+    """Serializer for checking ID verification status"""
+    from .models import IDVerification
+    
+    class Meta:
+        from .models import IDVerification
+        model = IDVerification
+        fields = ['is_verified', 'verification_date', 'verification_notes']
         read_only_fields = fields

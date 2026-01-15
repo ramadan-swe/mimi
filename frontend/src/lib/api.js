@@ -140,6 +140,10 @@ export const authAPI = {
     getProfile: async () => {
         return api.get('/api/auth/profile/');
     },
+    // PATCH /api/auth/profile/
+    updateProfile: async (data) => {
+        return api.patch('/api/auth/profile/', data);
+    },
     // POST /api/auth/password-reset/
     requestPasswordReset: async (email) => {
         return api.post('/api/auth/password-reset/', { email }, { skipAuth: true });
@@ -160,9 +164,21 @@ export const authAPI = {
     createVeriffSession: async () => {
         return api.post('/api/auth/veriff/create-session/');
     },
-    // POST /api/auth/upload-id/ (Fallback for manual verification)
+    // GET /api/auth/verify-identity/ - Get verification status
+    getVerificationStatus: async () => {
+        return api.get('/api/auth/verify-identity/');
+    },
+    // POST /api/auth/verify-identity/ - Submit ID verification documents
+    submitVerification: async (formData) => {
+        return api.post('/api/auth/verify-identity/', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    },
+    // POST /api/auth/upload-id/ (Legacy - Fallback for manual verification)
     uploadID: async (formData) => {
-        return api.post('/api/auth/upload-id/', formData, {
+        return api.post('/api/auth/verify-identity/', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
@@ -242,6 +258,10 @@ export const rentalsAPI = {
     // POST /api/listings/rentals/{id}/cancel/
     cancel: async (id) => {
         return api.post(`/api/listings/rentals/${id}/cancel/`);
+    },
+    // GET /api/listings/rentals/pending_count/ - Get count of pending rental requests for owner
+    getPendingCount: async () => {
+        return api.get('/api/listings/rentals/pending_count/');
     },
 };
 

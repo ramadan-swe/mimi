@@ -39,3 +39,30 @@ class User(AbstractUser):
     def active_listings_count(self):
         from listings.models import ListingStatus
         return self.listings.filter(status=ListingStatus.ACTIVE).count()
+
+
+class IDVerification(models.Model):
+    """Model for storing identity verification documents"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='id_verification')
+    national_id_image_front = models.ImageField(upload_to='national_id_images/front/')
+    national_id_image_back = models.ImageField(upload_to='national_id_images/back/')
+    driver_license_image = models.ImageField(upload_to='driver_license_images/')
+    is_verified = models.BooleanField(default=False)
+    verification_date = models.DateTimeField(auto_now_add=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    verification_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_users')
+    verification_notes = models.TextField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'ID Verification'
+        verbose_name_plural = 'ID Verifications'
+
+    def __str__(self):
+        return f"ID Verification for {self.user.email}"
+    
+    def get_verification_status(self):
+        """Display verification status clearly"""
+        if self.is_verified:
+            return "✓ Verified"
+        return "✗ Pending"
+    get_verification_status.short_description = "Verification Status"

@@ -4,7 +4,11 @@ import { ArrowRight, Shield, Star, Clock } from 'lucide-react';
 import BentoGrid from '../components/home/BentoGrid';
 import FeaturedCarousel from '../components/home/FeaturedCarousel';
 import FAQSection from '../components/home/FAQSection';
+import { useAuth } from '../../contexts/AuthContext';
+
 export default function HomePage() {
+    const { isAuthenticated } = useAuth();
+    
     return (<div className="min-h-screen bg-white">
             {/* Hero Section */}
             <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
@@ -23,7 +27,7 @@ export default function HomePage() {
                                     <ArrowRight className="ml-2 h-5 w-5"/>
                                 </Button>
                             </Link>
-                            <Link to="/signup">
+                            <Link to={isAuthenticated ? "/create-listing" : "/signup"}>
                                 <Button size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/30 px-8 text-lg backdrop-blur-sm">
                                     List Your Car
                                 </Button>
@@ -76,7 +80,7 @@ export default function HomePage() {
                                 Browse Cars
                             </Button>
                         </Link>
-                        <Link to="/signup">
+                        <Link to={isAuthenticated ? "/create-listing" : "/signup"}>
                             <Button size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/30 px-8 backdrop-blur-sm">
                                 Become a Host
                             </Button>

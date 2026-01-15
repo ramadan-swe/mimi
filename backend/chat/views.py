@@ -4,9 +4,12 @@ from rest_framework.decorators import action, api_view, permission_classes as pe
 from rest_framework.response import Response
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
 from .models import ChatRoom, Message
-from .serializers import ChatRoomSerializer, MessageSerializer, CreateChatRoomSerializer
+from .serializers import ChatRoomSerializer, MessageSerializer, CreateChatRoomSerializer, CreateChatRoomForRenterSerializer
 from listings.models import Listing
+
+User = get_user_model()
 
 class ChatRoomViewSet(viewsets.ModelViewSet):
     queryset = ChatRoom.objects.all()
@@ -54,6 +57,47 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
             listing=listing,
             renter=request.user,
             owner=listing.owner
+        )
+        
+        return Response(ChatRoomSerializer(chat_room, context={'request': request}).data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=False, methods=['post'])
+    def create_or_get_for_renter(self, request):
+        """
+        For owners to get/create a chat room with a specific renter.
+        Used when owner clicks 'Chat with Renter' on a rental request.
+        """
+        serializer = CreateChatRoomForRenterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        listing_id = serializer.validated_data['listing_id']
+        renter_id = serializer.validated_data['renter_id']
+        
+        listing = get_object_or_404(Listing, id=listing_id)
+        renter = get_object_or_404(User, id=renter_id)
+        
+        # Check if user is the owner of the listing
+        if request.user != listing.owner:
+            return Response(
+                {'error': 'You are not the owner of this listing'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Look for existing chat room
+        chat_room = ChatRoom.objects.filter(
+            listing=listing,
+            renter=renter,
+            owner=request.user
+        ).first()
+        
+        if chat_room:
+            return Response(ChatRoomSerializer(chat_room, context={'request': request}).data)
+        
+        # Create new chat room
+        chat_room = ChatRoom.objects.create(
+            listing=listing,
+            renter=renter,
+            owner=request.user
         )
         
         return Response(ChatRoomSerializer(chat_room, context={'request': request}).data, status=status.HTTP_201_CREATED)

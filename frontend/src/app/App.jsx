@@ -20,6 +20,8 @@ import OwnerDashboard from './pages/OwnerDashboard';
 import CreateListingPage from './pages/CreateListingPage';
 import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage';
+import EditProfilePage from './pages/EditProfilePage';
+import VerifyIdentityPage from './pages/VerifyIdentityPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import UserProfilePage from './pages/UserProfilePage';
 
@@ -51,6 +53,8 @@ function AppRoutes() {
           <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
           <Route path="/chat/:roomId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/profile/edit" element={<ProtectedRoute><EditProfilePage /></ProtectedRoute>} />
+          <Route path="/verify-identity" element={<ProtectedRoute><VerifyIdentityPage /></ProtectedRoute>} />
           <Route path="/subscription" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
         </Routes>
       </main>

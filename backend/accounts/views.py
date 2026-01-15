@@ -1,15 +1,19 @@
 from rest_framework import generics, views, status, permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import (
     CustomTokenObtainPairSerializer,
     UserRegistrationSerializer,
     ProfileSerializer,
     PhoneVerificationSerializer,
     OTPConfirmationSerializer,
-    PublicUserSerializer
+    PublicUserSerializer,
+    IDVerificationSerializer,
+    IDVerificationStatusSerializer
 )
 from .services import send_whatsapp_otp
+from .models import IDVerification
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -36,7 +40,7 @@ class UserRegistrationView(generics.CreateAPIView):
         )
 
 
-class ProfileView(generics.RetrieveAPIView):
+class ProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -102,3 +106,35 @@ class PublicUserProfileView(generics.RetrieveAPIView):
     permission_classes = [permissions.AllowAny]
     queryset = User.objects.all()
     lookup_field = 'pk'
+
+
+class IDVerificationView(views.APIView):
+    """Submit ID verification documents"""
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+    
+    def get(self, request):
+        """Get current verification status"""
+        try:
+            verification = IDVerification.objects.get(user=request.user)
+            serializer = IDVerificationStatusSerializer(verification)
+            return Response({
+                'has_submitted': True,
+                **serializer.data
+            })
+        except IDVerification.DoesNotExist:
+            return Response({
+                'has_submitted': False,
+                'is_verified': False
+            })
+    
+    def post(self, request):
+        """Submit ID verification documents"""
+        serializer = IDVerificationSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'message': 'Verification documents submitted successfully. Our team will review them shortly.',
+                'status': 'pending'
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

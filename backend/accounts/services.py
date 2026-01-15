@@ -45,6 +45,7 @@ def send_whatsapp_otp(phone_number):
     client = Client(account_sid, auth_token)
     
     try:
+        print(settings.TWILIO_FROM_NUMBER)
         message = client.messages.create(
             from_=settings.TWILIO_FROM_NUMBER,
             body=f"Your verification code for Mimi is: {otp_code}",

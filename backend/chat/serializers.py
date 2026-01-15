@@ -62,3 +62,9 @@ class ChatRoomSerializer(serializers.ModelSerializer):
 
 class CreateChatRoomSerializer(serializers.Serializer):
     listing_id = serializers.IntegerField(required=True)
+
+
+class CreateChatRoomForRenterSerializer(serializers.Serializer):
+    """Serializer for owner to create/get chat with a specific renter"""
+    listing_id = serializers.IntegerField(required=True)
+    renter_id = serializers.IntegerField(required=True)

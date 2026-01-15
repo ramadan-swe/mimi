@@ -6,7 +6,8 @@ from .views import (
     ProfileView,
     SendOTPView,
     VerifyOTPView,
-    PublicUserProfileView
+    PublicUserProfileView,
+    IDVerificationView
 )
 
 urlpatterns = [
@@ -16,5 +17,6 @@ urlpatterns = [
     path('auth/profile/', ProfileView.as_view(), name='profile'),
     path('auth/verify-phone/', SendOTPView.as_view(), name='verify-phone'),
     path('auth/confirm-otp/', VerifyOTPView.as_view(), name='confirm-otp'),
+    path('auth/verify-identity/', IDVerificationView.as_view(), name='verify-identity'),
     path('users/<int:pk>/', PublicUserProfileView.as_view(), name='public-user-profile'),
 ]

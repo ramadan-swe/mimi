@@ -34,6 +34,7 @@ export default function ExplorePage() {
     // Read AI search params
     const aiEnabled = searchParams.get('ai_enabled') === 'true';
     const aiQuery = searchParams.get('ai_query') || '';
+    const q = searchParams.get('q') || '';
 
     useEffect(() => {
         const fetchListings = async () => {
@@ -51,6 +52,9 @@ export default function ExplorePage() {
                     response = await listingsAPI.aiSearch(aiQuery);
                 } else {
                     // Standard listing fetch with filters
+                    if (q) {
+                        params.search = q;
+                    }
                     if (filters.governorate && filters.governorate !== '#') {
                         params.governorate = filters.governorate;
                     }
@@ -62,6 +66,12 @@ export default function ExplorePage() {
                     }
                     if (filters.category) {
                         params.vehicle__category = filters.category;
+                    }
+                    if (filters.seats) {
+                        params.vehicle__seats = filters.seats;
+                    }
+                    if (filters.features) {
+                        params.features = filters.features;
                     }
 
                     response = await listingsAPI.getAll(params);

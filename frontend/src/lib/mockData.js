@@ -17,10 +17,23 @@ export const GOVERNORATES = [
     'Gharbia',
     'Monufia',
 ];
-export const TRANSMISSION_TYPES = ['Automatic', 'Manual'];
-export const FUEL_TYPES = ['Petrol', 'Diesel', 'Electric', 'Hybrid'];
-export const SEAT_COUNTS = ['2', '4', '5', '7', '9+'];
-export const CATEGORIES = ['Economy', 'Mid-Range', 'Luxury', 'SUV', 'Compact'];
+export const TRANSMISSION_TYPES = [
+    { value: 'AUTOMATIC', label: 'Automatic' },
+    { value: 'MANUAL', label: 'Manual' }
+];
+export const FUEL_TYPES = [
+    { value: 'BENZINE', label: 'Benzine' },
+    { value: 'ELECTRIC', label: 'Electric' },
+    { value: 'HYBRID', label: 'Hybrid' }
+];
+export const SEAT_COUNTS = ['4', '5', '6', '7'];
+export const CATEGORIES = [
+    { value: 'BASE', label: 'Base Line' },
+    { value: 'MID', label: 'Mid Line' },
+    { value: 'HIGH', label: 'High Line' },
+    { value: 'TOP', label: 'Top Line' },
+    { value: 'PREMIUM', label: 'Premium' }
+];
 export const FEATURES = ['GPS', 'AUX', 'Bluetooth', 'Child Seats', 'Roof Rack', 'Sunroof', 'Backup Camera', 'Air Conditioning', 'Large Trunk'];
 // Mock user data
 export const mockUser = {

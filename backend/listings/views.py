@@ -130,7 +130,7 @@ class ExploreView(viewsets.ReadOnlyModelViewSet):
         ).prefetch_related('images')
         
         # Get query parameters
-        query = request.query_params.get('q')
+        query = request.query_params.get('q') or request.query_params.get('ai_query')
         intent_id = request.query_params.get('intent_id')
         governorate = request.query_params.get('governorate')
         category = request.query_params.get('category')

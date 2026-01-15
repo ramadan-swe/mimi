@@ -4,6 +4,7 @@ from . import views
 
 router = DefaultRouter()
 router.register(r'rentals', views.RentalRequestViewSet, basename='rental')
+router.register(r'reviews', views.ReviewViewSet, basename='review')
 router.register(r'', views.ListingViewSet, basename='listing')
 
 urlpatterns = [

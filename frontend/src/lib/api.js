@@ -22,16 +22,16 @@ function forceLogout() {
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    (config) => {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
 );
 
 // Token Refresh Logic
@@ -181,9 +181,9 @@ export const listingsAPI = {
         // Use the main listings endpoint with search parameter
         return api.get('/api/listings/', { params: { search: params.q, ...params } });
     },
-    // POST /api/listings/ai-search/
+    // GET /api/listings/explore/?q=... for AI semantic search
     aiSearch: async (prompt) => {
-        return api.post('/api/listings/ai-search/', { prompt });
+        return api.get('/api/listings/explore/', { params: { q: prompt } });
     },
     // POST /api/listings/
     create: async (data) => {
@@ -257,15 +257,15 @@ export const chatAPI = {
 export const reviewsAPI = {
     // POST /api/reviews/
     create: async (data) => {
-        return api.post('/api/reviews/', data);
+        return api.post('/api/listings/reviews/', data);
     },
     // GET /api/reviews/?listing={id}
     getByListing: async (listingId) => {
-        return api.get('/api/reviews/', { params: { listing: listingId } });
+        return api.get('/api/listings/reviews/', { params: { listing: listingId } });
     },
     // GET /api/reviews/?user={id}
     getByUser: async (userId) => {
-        return api.get('/api/reviews/', { params: { user: userId } });
+        return api.get('/api/listings/reviews/', { params: { user: userId } });
     },
 };
 

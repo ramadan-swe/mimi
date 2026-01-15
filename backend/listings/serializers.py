@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Vehicle, Listing, ListingImage, RentalRequest, Availability
+from .models import Vehicle, Listing, ListingImage, RentalRequest, Availability, Review
 from accounts.models import User
 from datetime import timedelta
 from decimal import Decimal
@@ -53,8 +53,8 @@ class ListingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Listing
-        fields = '__all__'
-        read_only_fields = ('owner', 'created_at', 'updated_at', 'status', 'is_featured', 'featured_until', 'embedding', 'latitude', 'longitude')
+        exclude = ('embedding',)  # Embedding is large (1536 dims) and only used for backend semantic search
+        read_only_fields = ('owner', 'created_at', 'updated_at', 'status', 'is_featured', 'featured_until', 'latitude', 'longitude')
 
 
 class ListingCreateSerializer(serializers.ModelSerializer):
@@ -198,3 +198,40 @@ class RentalRequestCreateSerializer(serializers.ModelSerializer):
         )
         
         return rental_request
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    """Serializer for listing reviews"""
+    reviewer_name = serializers.SerializerMethodField()
+    reviewer_image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Review
+        fields = ['id', 'transaction', 'reviewer', 'reviewer_name', 'reviewer_image', 'rating', 'comment', 'created_at']
+        read_only_fields = ['reviewer', 'reviewer_name', 'reviewer_image', 'created_at']
+
+    def get_reviewer_name(self, obj):
+        return f"{obj.reviewer.first_name} {obj.reviewer.last_name}".strip() or "User"
+        
+    def get_reviewer_image(self, obj):
+        # Return none or a placeholder if needed, logic depends on if User model has image
+        # For now, frontend handles initals if no image
+        return None
+
+    def validate(self, data):
+        transaction = data['transaction']
+        user = self.context['request'].user
+        
+        # 1. Check if the user is the renter in this transaction
+        if transaction.renter != user:
+            raise serializers.ValidationError("You can only review your own rentals.")
+            
+        # 2. Check if the rental status is COMPLETED
+        if transaction.status != 'COMPLETED':
+            raise serializers.ValidationError("You can only review completed rentals.")
+            
+        # 3. Check if review already exists (handled by database unique constraint, but good for UX)
+        if Review.objects.filter(transaction=transaction, reviewer=user).exists():
+            raise serializers.ValidationError("You have already reviewed this rental.")
+            
+        return data

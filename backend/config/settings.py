@@ -38,7 +38,7 @@ PAYMOB_IFRAME_ID = int(os.environ.get('PAYMOB_IFRAME_ID', os.environ.get('IFRAME
 PAYMOB_SECRET_KEY = os.environ.get('PAYMOB_SECRET_KEY')
 PAYMOB_PUBLIC_KEY = os.environ.get('PAYMOB_PUBLIC_KEY')
 PAYMOB_HMAC = os.environ.get('PAYMOB_HMAC')
-PAYMOB_WEBHOOK_URL = "https://johnnie-synonymic-carmelo.ngrok-free.dev/api/payments/webhook/paymob/"
+PAYMOB_WEBHOOK_URL = "https://8e1e1de100f3.ngrok-free.app/api/payments/webhook/paymob/"
 FRONTEND_URL = "http://localhost:3000"
 
 

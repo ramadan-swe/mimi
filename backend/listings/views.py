@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions, filters
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Listing, RentalRequest, Availability
+from .models import Listing, RentalRequest, Availability, Review
 from .serializers import (
     VehicleSerializer,
     VehicleCreateSerializer,
@@ -12,7 +12,9 @@ from .serializers import (
     RentalRequestSerializer,
     RentalRequestCreateSerializer,
     AvailabilitySerializer,
+    ReviewSerializer,
 )
+from .filters import ListingFilter
 from .permissions import IsOwnerOrReadOnly, IsVerified, CanCreateListing
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -24,7 +26,7 @@ class ListingViewSet(viewsets.ModelViewSet):
     serializer_class = ListingSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['status', 'governorate', 'vehicle__transmission', 'vehicle__fuel_type', 'vehicle__category', 'owner']
+    filterset_class = ListingFilter  # Use custom filter supporting comma-separated values
     search_fields = ['title', 'vehicle__brand', 'vehicle__model', 'city']
     ordering_fields = ['daily_price', 'created_at', 'vehicle__year']
     ordering = ['-created_at']
@@ -125,7 +127,7 @@ class ExploreView(viewsets.ReadOnlyModelViewSet):
         # Start with active listings
         queryset = Listing.objects.filter(status='ACTIVE').select_related(
             'vehicle', 'owner'
-        ).prefetch_related('images', 'vehicle__images')
+        ).prefetch_related('images')
         
         # Get query parameters
         query = request.query_params.get('q')
@@ -458,3 +460,34 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
             'range_start': today.isoformat(),
             'range_end': end_date.isoformat()
         })
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing reviews.
+    
+    Endpoints:
+    - POST /api/listings/reviews/ - Create a review
+    - GET /api/listings/reviews/?listing={id} - Get reviews for a listing
+    - GET /api/listings/reviews/?user={id} - Get reviews by a user
+    """
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    
+    def get_queryset(self):
+        queryset = Review.objects.all().select_related('reviewer', 'transaction', 'transaction__listing')
+        
+        listing_id = self.request.query_params.get('listing')
+        user_id = self.request.query_params.get('user')
+        
+        if listing_id:
+            # Get reviews for a specific listing (via transaction)
+            queryset = queryset.filter(transaction__listing_id=listing_id)
+            
+        if user_id:
+            # Get reviews given by a specific user
+            queryset = queryset.filter(reviewer_id=user_id)
+            
+        return queryset.order_by('-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(reviewer=self.request.user)

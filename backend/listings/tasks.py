@@ -87,9 +87,18 @@ def update_listing_embedding(self, listing_id):
         # Extract the embedding vector
         embedding_vector = response.data[0].embedding
         
-        # Save to database
-        listing.embedding = embedding_vector
-        listing.save(update_fields=['embedding'])
+        # Save to database - disconnect signal to prevent infinite loop
+        from listings.signals import listing_post_save
+        from django.db.models.signals import post_save
+        
+        # Disconnect the signal before saving to prevent re-triggering the task
+        post_save.disconnect(listing_post_save, sender=Listing)
+        try:
+            listing.embedding = embedding_vector
+            listing.save(update_fields=['embedding'])
+        finally:
+            # Always reconnect the signal
+            post_save.connect(listing_post_save, sender=Listing)
         
         logger.info(f"Successfully updated embedding for listing {listing_id}")
         
